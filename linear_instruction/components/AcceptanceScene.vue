@@ -6,7 +6,7 @@ const nav = useNav()
 const current = computed(() => Math.min(Math.max(nav.clicks.value, 0), 4))
 const items = [
   { label: '部门验收', title: '技术上能不能关', desc: '日志、截图、视频、commit、产物路径。' },
-  { label: '老板验收', title: '业务上值不值得过', desc: '是否达到目标、是否影响计划、是否可演示。' },
+  { label: '战略验收', title: '业务上值不值得过', desc: '是否达到目标、是否影响计划、是否可演示。' },
   { label: 'Done 证据', title: '关闭 issue 的依据', desc: '不是新任务，而是完成后的证据清单。' },
   { label: 'Project Update', title: '阶段管理摘要', desc: '引用关键 issue，写结论、风险、下一步。' },
 ]
@@ -30,7 +30,7 @@ const items = [
     <div class="bridge-panel">
       <div class="bridge-title">桥接关系</div>
       <div class="bridge-row" :class="{ active: current === 1 }">工程师证据 → 部门判断是否完成</div>
-      <div class="bridge-row" :class="{ active: current === 2 }">PM 摘要 → 老板判断是否验收</div>
+      <div class="bridge-row" :class="{ active: current === 2 }">统筹摘要 → 战略判断是否验收</div>
       <div class="bridge-row" :class="{ active: current === 3 }">Done 证据 → 未来复盘和追溯</div>
       <div class="bridge-row" :class="{ active: current === 4 }">Project Update → 阶段状态对齐</div>
     </div>

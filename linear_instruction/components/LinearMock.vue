@@ -109,7 +109,7 @@ const entities = [
         <div class="risk-card">
           <div class="risk-label">RISK</div>
           <h3>规划成功率不稳定，可能影响演示 Milestone</h3>
-          <p>影响：演示验收 / 跨部门联调 / 老板决策</p>
+          <p>影响：演示验收 / 跨部门联调 / 方向决策</p>
           <div class="risk-row"><b>触发条件</b><span>成功率连续低于 80%</span></div>
           <div class="risk-row"><b>缓解方案</b><span>先冻结障碍简化版，另开优化 issue</span></div>
         </div>

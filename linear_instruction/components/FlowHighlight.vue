@@ -9,12 +9,12 @@ const props = defineProps({
 const nav = useNav()
 const current = computed(() => props.fromClicks ? Math.min(Math.max(nav.clicks.value, 0), 6) : props.active)
 const nodes = [
-  { title: 'Project', sub: '方向和边界' },
+  { title: 'Team', sub: '归属边界' },
+  { title: 'Project', sub: '方向目标' },
   { title: 'Milestone', sub: '阶段验收' },
   { title: 'Issue', sub: '具体动作' },
   { title: 'Comment', sub: '过程证据' },
-  { title: 'Update', sub: '阶段汇报' },
-  { title: 'Done', sub: '完成依据' },
+  { title: 'Update/Done', sub: '汇报依据' },
 ]
 </script>
 

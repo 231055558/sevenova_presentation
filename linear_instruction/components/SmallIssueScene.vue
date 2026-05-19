@@ -44,7 +44,7 @@ const steps = [
         <div class="comment" :class="{ glow: current === 2 }"><b>运控：</b>已复现，失败集中在 pitch +15° 姿态。</div>
         <div class="comment c2" :class="{ glow: current === 3 }"><b>机械：</b>tool0 坐标可能偏 12mm，拆 subissue 复核。</div>
         <div class="comment c3" :class="{ glow: current === 4 }"><b>GitOps：</b>Refs TIM-52: 增加 IK 失败分类日志。</div>
-        <div class="comment c4" :class="{ glow: current === 5 }"><b>PM：</b>Done 证据齐：日志、截图、commit、结论。</div>
+        <div class="comment c4" :class="{ glow: current === 5 }"><b>统筹者：</b>Done 证据齐：日志、截图、commit、结论。</div>
       </div>
 
       <section class="scene-note" :class="{ idle: current === 0 }">

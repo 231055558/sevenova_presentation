@@ -3,7 +3,7 @@ theme: default
 title: Linear 工作流说明
 info: |
   ## Linear 工作流说明
-  面向老板、PM、工程师与 AI 工程师的公司协作教程。
+  面向战略负责人、多部门统筹、工程师与 AI 工程师的公司协作教程。
 class: text-left
 transition: fade
 drawings:
@@ -22,12 +22,12 @@ duration: 22min
 
 <div class="mt-14 grid grid-cols-3 gap-5">
   <div v-click class="entity-card explain-focus">
-    <div class="entity-label">老板</div>
-    <div class="entity-title">快速看懂项目</div>
+    <div class="entity-label">战略负责人</div>
+    <div class="entity-title">把握方向和取舍</div>
     <div class="entity-desc">进度、风险、证据、决策点</div>
   </div>
   <div v-click class="entity-card explain-focus">
-    <div class="entity-label">PM</div>
+    <div class="entity-label">多部门统筹</div>
     <div class="entity-title">拆解和同步</div>
     <div class="entity-desc">Project / Milestone / Issue / Update</div>
   </div>
@@ -44,7 +44,7 @@ duration: 22min
 讲稿：
 - 今天不是介绍一个软件有多厉害，而是说明我们公司准备怎么用它减少协作损耗。
 - 现在真实工作会发生在代码、机械安装、测试、会议、采购、人事等很多地方，最大问题是信息容易散。
-- Linear 在这里的作用是：让老板快速看状态，让 PM 能拆解同步，让工程师和 AI 知道自己该接哪一步。
+- Linear 在这里的作用是：让战略负责人快速看方向和风险，让多部门统筹能拆解同步，让工程师和 AI 知道自己该接哪一步。
 - 先记住一句话：Linear 不替大家工作，它负责让工作不丢、结果可追溯。
 -->
 
@@ -146,7 +146,7 @@ layout: section
 讲稿：
 - 第三部分讲协作边界。
 - 部门内问题可以快一点，评论里问清楚就行。
-- 部门间就不能靠“帮我问一下”，需要显式留下依赖关系，否则 PM 和老板都看不见真实阻塞。
+- 部门间就不能靠“帮我问一下”，需要显式留下依赖关系，否则统筹者和战略负责人都看不见真实阻塞。
 -->
 
 ---
@@ -162,7 +162,7 @@ clicks: 4
 - click 1 部门内：同一个 team 里，能在原 issue 评论解决的就别乱拆。
 - click 2 部门间：跨 team 时，用 related / blocked by / subissue，把依赖放到系统里。
 - click 3 需要他人介入：@ 人的时候要说明希望对方确认什么、给什么输入、是否影响验收。
-- click 4 Resolve：评论 resolve 只表示这个讨论点闭环；仍影响验收、风险判断、老板决策的评论不要 resolve。
+- click 4 Resolve：评论 resolve 只表示这个讨论点闭环；仍影响验收、风险判断、方向决策的评论不要 resolve。
 - 补充：Linear 的 issue 默认单 assignee，所以多人协作时用主负责人 + subissue / 评论 @ 人来表达协作，不要让“多人负责”等于没人负责。
 -->
 
@@ -172,12 +172,12 @@ layout: section
 
 # 第四部分：验收、证据、Update，分别给谁看？
 
-<div class="text-2xl opacity-75 mt-6">部门推进和老板验收不是同一件事，中间要靠证据桥接。</div>
+<div class="text-2xl opacity-75 mt-6">部门推进和战略验收不是同一件事，中间要靠证据桥接。</div>
 
 <!--
 讲稿：
-- 第四部分是最容易混的：部门说完成了，老板未必知道它为什么算完成。
-- 工程师负责留下技术证据，PM 负责把证据翻译成管理语言和业务结论。
+- 第四部分是最容易混的：部门说完成了，战略负责人未必知道它为什么值得通过。
+- 工程师负责留下技术证据，多部门统筹负责把证据翻译成管理语言和业务结论。
 - 所以 issue、Done 证据、Project Update 的职责不同，不能互相替代。
 -->
 
@@ -192,10 +192,10 @@ clicks: 4
 <!--
 讲稿：
 - click 1 部门验收：看技术上能不能关，例如能运行、误差达标、稳定性达标、实物安装完成。
-- click 2 老板验收：看业务上值不值得过，例如能否演示、是否影响交付、是否符合当前目标。
+- click 2 战略验收：看业务上值不值得过，例如能否演示、是否影响交付、是否符合当前目标。
 - click 3 Done 证据：不是新任务，而是 issue 关闭依据，未来复盘时能知道为什么当时认为完成。
-- click 4 Project Update：写阶段摘要，引用关键 issue，不复制 issue 全文；它给老板、PM、跨部门快速同步用。
-- 这里的桥接关系是：工程师证据 → PM 摘要 → 老板判断。
+- click 4 Project Update：写阶段摘要，引用关键 issue，不复制 issue 全文；它给战略负责人、多部门统筹和跨部门快速同步用。
+- 这里的桥接关系是：工程师证据 → 统筹摘要 → 战略判断。
 -->
 
 ---
@@ -223,7 +223,7 @@ clicks: 3
 
 <!--
 讲稿：
-- click 1 Risk issue：风险不是普通 bug，而是可能影响 Milestone、交付时间、成本、跨部门资源或老板决策的不确定性。
+- click 1 Risk issue：风险不是普通 bug，而是可能影响 Milestone、交付时间、成本、跨部门资源或方向决策的不确定性。
 - click 2 Blocked：不要只写“卡住了”，要写被什么卡住、等谁、需要什么输入、解除后下一步是什么。
 - click 3 Delay：延期不只是改 due date，要写原因、剩余工作、新截止时间、是否影响上级 Milestone。
 - 小问题先留评论；只有影响计划时，才升级成 Risk issue。
@@ -253,15 +253,15 @@ clicks: 10
 
 <!--
 讲稿：
-- click 1 老板提出目标：两周内看到新机械臂仿真闭环演示。
-- click 2 PM 建 Project：写目标、边界、时间、验收口径。
+- click 1 战略负责人提出方向：两周内看到新机械臂仿真闭环演示。
+- click 2 统筹者建 Project：写目标、边界、时间、验收口径。
 - click 3 拆 Milestone：场景搭建、规划闭环、演示验收。
 - click 4 创建 Issues：机械、仿真、运控、GitOps 分工，每个 issue 有负责人和验收。
 - click 5 部门内推进：工程师用短评论留下进展、证据、风险、下一步。
 - click 6 跨部门 subissue：模型坐标、接口、场景等跨部门问题显式拆出来。
 - click 7 Git Refs：提交和 issue 关联，后续能从 Linear 追到代码。
 - click 8 Risk 升级：影响 Milestone 的不确定性单独追踪。
-- click 9 老板验收：老板看 Update 和关键证据，PM 负责翻译技术结果。
+- click 9 战略验收：战略负责人看 Update 和关键证据，统筹者负责翻译技术结果。
 - click 10 Done 证据归档：结论、证据、commit、产物路径保留，后续方向进 Backlog 或新 issue。
 - 补充 AI 场景：AI 工程师接手时，先读 issue 描述、最新评论、关联 commit；完成后必须留下交接说明。
 -->

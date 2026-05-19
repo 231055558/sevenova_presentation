@@ -10,7 +10,7 @@ const items = [
   { key: 'milestone', nav: 'Projects', label: 'Milestone', title: '阶段', desc: '阶段验收点。', note: '它不是任务篮子，而是阶段验收口径。' },
   { key: 'issue', nav: 'Issues', label: 'Issue', title: '任务 / 问题', desc: '具体执行闭环。', note: '小问题用 issue；大到跨阶段才升级成 project。' },
   { key: 'comment', nav: 'Issues', label: 'Comment / Reply', title: '过程沟通', desc: '进展、证据、风险。', note: '评论 resolve 表示讨论点闭环，不等于 issue 完成。' },
-  { key: 'update', nav: 'Projects', label: 'Update / Done', title: '汇报和完成依据', desc: '阶段摘要与关闭证据。', note: '老板验收看结论，部门推进看技术证据，中间要桥接。' },
+  { key: 'update', nav: 'Projects', label: 'Update / Done', title: '汇报和完成依据', desc: '阶段摘要与关闭证据。', note: '战略验收看结论，部门推进看技术证据，中间要桥接。' },
 ]
 
 const activeItem = computed(() => current.value > 0 ? items[current.value - 1] : null)
