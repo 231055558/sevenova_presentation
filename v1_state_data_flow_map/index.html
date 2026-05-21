@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ALFA Robot V1 状态机 × 数据流地图</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">ALFA Robot · V1 最小闭环</div>
+      <h1>状态机 × 数据流全流程地图</h1>
+      <p>把 MOTION-22 的数据契约和 MOTION-24 的状态机放到同一张可检查、可讲解、可继续细化的长页面里。</p>
+      <div class="hero-actions">
+        <a href="#flow">查看主流程</a>
+        <a href="#data">查看数据对象</a>
+        <a href="#recovery">查看异常恢复</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <b>使用方式</b>
+      <span>鼠标放到节点：高亮上下游</span>
+      <span>点击节点：右侧固定显示详细信息</span>
+      <span>切换视角：状态 / 数据 / 异常 / MoveIt</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="rules">
+      <h2>已确认的 6 条硬规则</h2>
+      <div class="rule-grid">
+        <article><b>一一映射</b><span>每个最小状态对应一个标准 <code>stage_result.stage</code>。</span></article>
+        <article><b>双名制</b><span><code>state_id</code> 给状态图看，<code>stage</code> 给日志和接口用。</span></article>
+        <article><b>状态边界</b><span>改变系统理解的世界状态，就拆独立状态。</span></article>
+        <article><b>双臂结果</b><span>主流程任务级，执行结果 left/right slot 级。</span></article>
+        <article><b>异常矩阵</b><span>失败必须写清 <code>failure_status → recovery_action → next_state</code>。</span></article>
+        <article><b>场景门槛</b><span>箱子归属/位置变化必须更新 MoveIt scene。</span></article>
+      </div>
+    </section>
+
+    <section id="flow" class="workspace">
+      <div class="section-head">
+        <div>
+          <h2>完整状态-数据流图</h2>
+          <p>默认看主流程，点击任意状态查看数据、异常和下一步。状态卡片上的 <code>slot</code> / <code>scene</code> 表示它是否涉及双臂独立结果或 MoveIt 场景硬门槛。</p>
+        </div>
+        <div class="view-switch" role="tablist" aria-label="视角切换">
+          <button class="active" data-view="all">全部</button>
+          <button data-view="L0">任务级</button>
+          <button data-view="L1">循环级</button>
+          <button data-view="L2">动作级</button>
+          <button data-view="L3">场景/安全</button>
+        </div>
+      </div>
+
+      <div class="map-layout">
+        <div class="map-panel">
+          <div id="layerLegend" class="layer-legend"></div>
+          <div id="flowRows" class="flow-rows"></div>
+        </div>
+        <aside id="detailPanel" class="detail-panel sticky"></aside>
+      </div>
+    </section>
+
+    <section id="data" class="workspace data-section">
+      <div class="section-head">
+        <div>
+          <h2>数据对象视角</h2>
+          <p>这里不展开所有字段，只显示每个对象的关键字段、来源和消费者。点击数据对象会高亮读写它的状态。</p>
+        </div>
+      </div>
+      <div class="data-layout">
+        <div id="dataGrid" class="data-grid"></div>
+        <aside id="dataDetail" class="detail-panel"></aside>
+      </div>
+    </section>
+
+    <section id="recovery" class="workspace recovery-section">
+      <div class="section-head">
+        <div>
+          <h2>异常恢复矩阵</h2>
+          <p>不允许只有一个 ERROR_HANDLE 黑洞。每个异常必须明确失败状态、恢复动作和下一状态。</p>
+        </div>
+      </div>
+      <div id="recoveryGrid" class="recovery-grid"></div>
+    </section>
+
+    <section id="scene" class="workspace scene-section">
+      <div class="section-head">
+        <div>
+          <h2>MoveIt 场景一致性链路</h2>
+          <p>箱子从视觉目标到 world object、attached object、placed/removed object 的变化必须可追踪。任何 scene update 失败都不能继续正常流程。</p>
+        </div>
+      </div>
+      <div id="sceneTimeline" class="scene-timeline"></div>
+    </section>
+
+    <section class="workspace matrix-section">
+      <div class="section-head">
+        <div>
+          <h2>状态-数据对齐矩阵</h2>
+          <p>这是后续 MOTION-22 / MOTION-24 需要共同维护的核心表。页面初稿已经把每个状态的主契约列出来。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="matrixTable"></table>
+      </div>
+    </section>
+  </main>
+
+  <script src="flow-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
