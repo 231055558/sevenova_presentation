@@ -1,0 +1,65 @@
+digraph MigrationRoadmap {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad=0.24,
+    nodesep=0.28,
+    ranksep=0.52,
+    splines=polyline,
+    compound=true,
+    newrank=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=10.2,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.15,
+    margin="0.14,0.10"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=8.5,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.25,
+    arrowsize=0.7
+  ];
+
+  p0 [label="P0 · 合同基线\n术语 / Interface / error taxonomy"];
+  g0 [label="Gate\n文档与 schema 一致", shape=note, fillcolor="#efe1cf"];
+  p1 [label="P1 · 无 ROS 纵向链\nrequest → fake → result", fillcolor="#ddc7aa"];
+  g1 [label="Gate\nCI 可重复 + 失败路径", shape=note, fillcolor="#efe1cf"];
+  p2 [label="P2 · 包装成熟算法\nIK / planning / trajectory Adapter"];
+  g2 [label="Gate\n新旧结果可比较", shape=note, fillcolor="#efe1cf"];
+  p3 [label="P3 · Twin 合同对齐\nvelocity / clock / feedback / faults"];
+  g3 [label="Gate\n同一 suite 跑 Fake + Twin", shape=note, fillcolor="#efe1cf"];
+  p4 [label="P4 · ROS / 主站影子链\nplanning-only + SIL", fillcolor="#f5ead8"];
+  g4 [label="Gate\n无双执行权威", shape=note, fillcolor="#f4dfd7", color="#8a4037"];
+  p5 [label="P5 · 切换唯一执行权威\n分场景放量 + rollback", fillcolor="#687157", fontcolor="#fffaf0", penwidth=1.7];
+
+  p0 -> g0 -> p1 -> g1 -> p2 -> g2;
+  p3 -> g3 -> p4 -> g4 -> p5;
+  g2 -> p3 [label="next evidence", style=dashed, color="#9b6548", fontcolor="#9b6548", constraint=false];
+  p0 -> p3 [style=invis, weight=100];
+
+  { rank=same; p0; g0; p1; g1; p2; g2; }
+  { rank=same; p3; g3; p4; g4; p5; }
+
+  old [label="当前 ROS / MoveIt / Python 运行链\n持续提供生产行为", shape=box3d, fillcolor="#fffaf0"];
+  shadow [label="新 Runtime\n只读事实 + planning-only", shape=box3d, fillcolor="#ddc7aa"];
+  authority [label="Execution authority token\n任何时刻只能有一个持有者", shape=note, fillcolor="#f4dfd7", color="#8a4037", fontcolor="#8a4037"];
+
+  p3 -> old [style=invis, weight=50];
+  old -> shadow [label="record + compare", style=dashed, color="#9b6548", fontcolor="#9b6548"];
+  shadow -> p4 [label="evidence", style=dashed, color="#9b6548", fontcolor="#9b6548", constraint=false];
+  authority -> old [label="before P5", color="#8a4037", fontcolor="#8a4037", constraint=false];
+  authority -> p5 [label="after approved cutover", color="#687157", fontcolor="#687157", constraint=false];
+  { rank=same; authority; old; shadow; }
+}

@@ -1,0 +1,106 @@
+digraph TestCoverageMap {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad=0.24,
+    nodesep=0.28,
+    ranksep=0.42,
+    splines=polyline,
+    compound=true,
+    newrank=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=10.2,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.1,
+    margin="0.13,0.08"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=8.5,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.15,
+    arrowsize=0.66
+  ];
+
+  subgraph cluster_l0 {
+    label="L0 · Pure domain";
+    labelloc=t; labeljust=l; color="#76513b"; fillcolor="#fff7ea"; style="rounded,filled";
+    l0_test [label="Unit + property tests", fillcolor="#4b2f22", fontcolor="#fff8ed"];
+    l0_core [label="WorkflowCompiler / MotionEngine\nTrajectoryValidator / error mapping"];
+    l0_fake [label="Fake clock + in-memory data"];
+    l0_test -> l0_core -> l0_fake;
+    { rank=same; l0_test; l0_core; l0_fake; }
+  }
+
+  subgraph cluster_l1 {
+    label="L1 · Complete MotionJob without ROS";
+    labelloc=t; labeljust=l; color="#76513b"; fillcolor="#f4e8d7"; style="rounded,filled";
+    l1_request [label="TaskRequest"];
+    l1_runtime [label="RuntimeGraph + JobManager\nMailbox + Scheduler", fillcolor="#ddc7aa"];
+    l1_alg [label="Scripted IK / Planner"];
+    l1_exec [label="FakeExecutionAdapter"];
+    l1_assert [label="Result + Event chain\nrecovery assertions"];
+    l1_request -> l1_runtime -> l1_alg -> l1_exec -> l1_assert;
+    { rank=same; l1_request; l1_runtime; l1_alg; l1_exec; l1_assert; }
+  }
+
+  subgraph cluster_l2 {
+    label="L2 · Digital twin";
+    labelloc=t; labeljust=l; color="#8b6b58"; fillcolor="#efe1cf"; style="rounded,filled";
+    l2_job [label="Real workflow + algorithms"];
+    l2_twin [label="TwinRuntimePack\nclock + interpolation + state", fillcolor="#ddc7aa"];
+    l2_fault [label="FaultInjector\nstale state / lag / following error"];
+    l2_observe [label="Telemetry + visualization"];
+    l2_job -> l2_twin -> l2_fault -> l2_observe;
+    { rank=same; l2_job; l2_twin; l2_fault; l2_observe; }
+  }
+
+  subgraph cluster_l3 {
+    label="L3 · ROS integration";
+    labelloc=t; labeljust=l; color="#9b6548"; fillcolor="#f5ead8"; style="rounded,filled";
+    l3_launch [label="launch_testing"];
+    l3_ros [label="ROS Adapter\naction / topic / TF / QoS", fillcolor="#ddc7aa"];
+    l3_nodes [label="real nodes + mock providers"];
+    l3_assert [label="message conversion\ncancel / timeout / lifecycle"];
+    l3_launch -> l3_ros -> l3_nodes -> l3_assert;
+    { rank=same; l3_launch; l3_ros; l3_nodes; l3_assert; }
+  }
+
+  subgraph cluster_l4 {
+    label="L4 · Master SIL";
+    labelloc=t; labeljust=l; color="#687157"; fillcolor="#ece7d8"; style="rounded,filled";
+    l4_adapter [label="Production ExecutionAdapter"];
+    l4_master [label="EtherCAT master emulator\nbuffer + interpolation", fillcolor="#687157", fontcolor="#fffaf0"];
+    l4_fault [label="drive / encoder / watchdog faults"];
+    l4_assert [label="deadline + profile parity\nerror translation"];
+    l4_adapter -> l4_master -> l4_fault -> l4_assert;
+    { rank=same; l4_adapter; l4_master; l4_fault; l4_assert; }
+  }
+
+  subgraph cluster_l5 {
+    label="L5 · HIL / real robot · 人工安全门禁";
+    labelloc=t; labeljust=l; color="#8a4037"; fillcolor="#f4dfd7"; style="rounded,filled"; penwidth=1.4;
+    l5_gate [label="manual safety approval", fillcolor="#8a4037", fontcolor="#fff8ed"];
+    l5_motion [label="single segment / low speed\nno-load → loaded"];
+    l5_measure [label="direction / zero / timing\nfollowing error / stop chain"];
+    l5_evidence [label="trace + acceptance evidence"];
+    l5_gate -> l5_motion -> l5_measure -> l5_evidence;
+    { rank=same; l5_gate; l5_motion; l5_measure; l5_evidence; }
+  }
+
+  l0_test -> l1_request [label="adds orchestration", style=dashed, color="#9b6548", fontcolor="#9b6548"];
+  l1_request -> l2_job [label="adds time + state", style=dashed, color="#9b6548", fontcolor="#9b6548"];
+  l2_job -> l3_launch [label="adds transport", style=dashed, color="#9b6548", fontcolor="#9b6548"];
+  l3_launch -> l4_adapter [label="adds production protocol", style=dashed, color="#9b6548", fontcolor="#9b6548"];
+  l4_adapter -> l5_gate [label="adds physical evidence", style=dashed, color="#8a4037", fontcolor="#8a4037"];
+}

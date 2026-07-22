@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="robot_motion_control 下一阶段目标运行时架构总览">
+  <title>整体架构 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="overview">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div><h1 id="site-title">robot_motion_control 目标运行时架构</h1></div>
+        <p id="site-meta"></p>
+      </div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="kicker">目标架构 · 领域核心与外部适配</span>
+        <h2>先完成启动组合，再让每项任务沿冻结的运行时依赖图运行。</h2>
+        <p>
+          目标不是把 ROS 节点换一套名字，而是形成一个可以无 ROS 测试、可组合算法、可替换真机与数字孪生、
+          能审计完整执行过程的运控运行时。算法实现保持可迭代，任务和执行接口保持清晰。
+        </p>
+        <div class="badge-row">
+          <span class="badge ready">启动失败即关闭入口</span>
+          <span class="badge typed">类型安全注册</span>
+          <span class="badge concurrent">有界并发</span>
+          <span class="badge realtime">主站实时插值</span>
+          <span class="badge replaceable">真机/孪生同族适配器</span>
+        </div>
+      </div>
+      <aside class="hero-aside">
+        <strong>阅读这份文档时请区分</strong>
+        <p>
+          `docs/system_flow` 描述当前仓库；本门户描述目标架构 v0。新的模块和软件包只有在纵向切片中产生
+          实际收益后才落地，不以类数量衡量架构完成度。
+        </p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">L1 · 系统上下文</span>
+          <h2>运控运行时处在什么位置</h2>
+          <p>本图只回答系统边界和外部协作对象。内部模块、通信协议、技术栈和执行时序留给下一层图。</p>
+        </div>
+        <span class="diagram-scope">面向：项目成员、运控、电控、测试</span>
+      </div>
+      <figure class="architecture-figure">
+        <div class="diagram-layout context-layout">
+          <div class="context-map" role="img" aria-label="运控运行时与任务系统、机器人事实源、运行时提供者、观察与测试工具之间的系统上下文">
+            <article class="diagram-node context-node context-task">
+              <span class="node-kind">上游系统</span>
+              <h3>任务系统</h3>
+              <p>提交任务意图，接收最终结果。</p>
+            </article>
+            <div class="context-connector connector-down connector-01" aria-hidden="true"><span>01</span></div>
+
+            <article class="diagram-node context-node context-facts">
+              <span class="node-kind">事实来源</span>
+              <h3>机器人事实源</h3>
+              <p>机器人模型、场景、标定与设备能力。</p>
+            </article>
+            <div class="context-connector connector-right connector-02" aria-hidden="true"><span>02</span></div>
+
+            <article class="diagram-node context-node context-core primary-node">
+              <span class="node-kind">目标系统</span>
+              <h3>运控运行时</h3>
+              <code>robot_motion_control</code>
+              <p>把任务意图转化为可验证、可执行、可追踪的运动结果。</p>
+            </article>
+
+            <div class="context-connector connector-right connector-03" aria-hidden="true"><span>03</span></div>
+            <article class="diagram-node context-node context-provider">
+              <span class="node-kind">执行环境</span>
+              <h3>运行时提供者</h3>
+              <p>真机主站、数字孪生、仿真或测试替身。</p>
+            </article>
+
+            <div class="context-connector connector-down connector-04" aria-hidden="true"><span>04</span></div>
+            <article class="diagram-node context-node context-observer">
+              <span class="node-kind">旁路消费者</span>
+              <h3>观察与测试工具</h3>
+              <p>日志、指标、可视化、回放与故障注入。</p>
+            </article>
+          </div>
+
+          <aside class="relationship-notes" aria-label="系统交互说明">
+            <div class="relationship-heading">
+              <span>关系说明</span>
+              <strong>只保留四条主关系</strong>
+            </div>
+            <ol>
+              <li><span>01</span><div><strong>任务请求 / 结果</strong><p>任务系统表达目标，不直接挑选底层算法或执行设备。</p></div></li>
+              <li><span>02</span><div><strong>带版本的事实</strong><p>每项任务读取可追溯的机器人、场景与标定快照。</p></div></li>
+              <li><span>03</span><div><strong>执行合同 / 状态</strong><p>同一份领域合同可绑定真机、孪生、仿真或测试实现。</p></div></li>
+              <li><span>04</span><div><strong>事件 / 遥测</strong><p>观察者订阅事实，但不进入任务控制路径。</p></div></li>
+            </ol>
+          </aside>
+        </div>
+        <figcaption class="diagram-caption">
+          <span><i class="block-key core"></i>本图主角</span>
+          <span><i class="block-key adapter"></i>外部协作系统</span>
+          <span>阅读原则：先识别边界，再进入内部结构。</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">设计原则</span>
+          <h2>六条架构主线</h2>
+          <p>这些原则决定代码依赖方向、启动顺序、并发形状、执行责任和测试方法。</p>
+        </div>
+      </div>
+      <div id="principle-grid" class="principle-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">系统分层</span>
+          <h2>整体分层</h2>
+          <p>层次表达依赖方向，不要求每一层独立成 ROS2 软件包。只有在独立构建、测试、部署或发布有价值时才拆分软件包。</p>
+        </div>
+        <p class="side-note">上层表达任务意图，下层提供能力和事实；任何外部框架都通过适配器穿过明确边界。</p>
+      </div>
+      <div id="architecture-layers" class="architecture-layers"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">端到端流程</span>
+          <h2>从进程启动到任务收口</h2>
+          <p>启动阶段确定“可以做什么以及由谁做”，任务阶段只沿已经构建的依赖图运行。</p>
+        </div>
+      </div>
+      <div id="overall-flow" class="numbered-flow"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">三个架构锚点</span>
+          <h2>三个最重要的架构对象</h2>
+          <p>任务包、运行时依赖图和单次运动任务分别回答任务类型、启动绑定和单次运行的问题。</p>
+        </div>
+      </div>
+      <div id="key-concepts" class="concept-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">局部展开</span>
+          <h2>继续查看局部架构</h2>
+          <p>推荐先读启动与任务流，再读轨迹与执行；实现前最后看技术栈与迁移。</p>
+        </div>
+      </div>
+      <div id="page-links" class="page-link-grid"></div>
+    </section>
+
+    <p class="footer-note">
+      结构化内容维护入口：`docs/motion_runtime_architecture/assets/data.js`；关键决策见 `DECISIONS.md`。
+    </p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

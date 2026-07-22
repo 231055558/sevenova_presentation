@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>真机与数字孪生 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="runtime">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><h1 id="site-title"></h1><p id="site-meta"></p></div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-copy">
+        <span class="kicker">运行时包 · 真机 · 孪生 · 测试 · 回放</span>
+        <h2>任务只认识运行能力，不认识“现在是不是仿真”。</h2>
+        <p>真机、数字孪生、确定性测试和记录回放在启动时注册同族接口。运行时依赖图选择一个组合，决策引擎不写模式分支。</p>
+      </div>
+      <aside class="hero-aside">
+        <strong>数字孪生的身份</strong>
+        <p>它既是执行适配器，也是机器人状态事实提供者；Rerun 和 RViz 只是旁路观察者，不能反过来驱动孪生世界。</p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">L3 · 运行环境插槽</span>
+          <h2>一个稳定合同，四种可替换实现</h2>
+          <p>运控核心只依赖稳定接口；启动时从真机、数字孪生、确定性测试和记录回放中选择一种运行组合。</p>
+        </div>
+        <span class="diagram-scope">绑定时机：启动构图阶段，仅一次</span>
+      </div>
+      <figure class="architecture-figure">
+        <div class="diagram-layout runtime-binding-layout">
+          <div class="runtime-binding-board" role="img" aria-label="运控核心通过执行、状态、健康、时钟和遥测五个稳定接口，在启动时绑定真机、数字孪生、确定性测试或记录回放实现">
+            <section class="runtime-consumer">
+              <span>运控核心</span>
+              <h3>决策引擎 + 执行监督</h3>
+              <p>只发出领域命令、读取领域结果，不判断当前是否为仿真。</p>
+            </section>
+
+            <section class="interface-rack">
+              <header><span>稳定边界</span><strong>运行环境合同</strong><small>命令、结果、错误、取消与时间语义保持一致</small></header>
+              <div>
+                <span><strong>执行</strong><small>完整定时轨迹</small></span>
+                <span><strong>机器人状态</strong><small>位置、速度、设备状态</small></span>
+                <span><strong>健康检查</strong><small>能力与依赖可用性</small></span>
+                <span><strong>时钟</strong><small>单调时间与控制周期</small></span>
+                <span><strong>遥测</strong><small>期望、实际与误差</small></span>
+              </div>
+            </section>
+
+            <div class="binding-choice"><span>启动时四选一</span><i></i></div>
+
+            <section class="provider-options">
+              <article class="provider-real"><span>生产</span><h3>真机运行时</h3><p>硬件适配器 → EtherCAT 主站 → 编码器、驱动与工具</p><small>提供真实硬件与实时证据</small></article>
+              <article class="provider-twin"><span>集成</span><h3>数字孪生运行时</h3><p>孪生适配器 → 世界模型 → 仿真时钟与故障注入</p><small>复现执行合同与状态推进</small></article>
+              <article class="provider-fake"><span>日常测试</span><h3>确定性测试运行时</h3><p>脚本化结果、手动时钟、调用捕获与错误注入</p><small>快速覆盖分支与恢复路径</small></article>
+              <article class="provider-replay"><span>诊断</span><h3>记录回放运行时</h3><p>只读重放状态、操作结果、事件与原始时间关系</p><small>稳定复现实验与现场故障</small></article>
+            </section>
+          </div>
+
+          <aside class="runtime-observer-rule">
+            <span>观察者边界</span>
+            <strong>日志、Rerun、RViz 和指标只能消费遥测，不能控制真机或孪生。</strong>
+          </aside>
+        </div>
+        <figcaption class="diagram-caption">
+          <span><i class="block-key core"></i>稳定运行环境接口</span>
+          <span><i class="block-key supervision"></i>真机实时实现</span>
+          <span><i class="block-key twin"></i>数字孪生实现</span>
+          <span><i class="block-key test"></i>确定性测试实现</span>
+          <span><i class="line-key prohibited"></i>观察者无控制权</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">实现选项</span><h2>四种运行时包</h2><p>同一任务包可以绑定不同运行时包；每一种只对自己能够提供的证据负责。</p></div>
+      </div>
+      <div id="runtime-packs" class="runtime-pack-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">孪生内部结构</span><h2>数字孪生局部架构</h2><p>多个适配器可以共享一个孪生世界实现，但对外保持执行、状态、健康、时钟和故障注入的准确接口。</p></div>
+      </div>
+      <div id="twin-modules" class="pair-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">合同一致性</span><h2>真机与孪生必须对齐什么</h2><p>性能和物理真实性可以不同，字段、时间、反馈、取消和错误语义不能静默不同。</p></div>
+      </div>
+      <div id="runtime-parity" class="data-table"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">绑定示例</span><h2>启动配置如何同时选择算法和孪生</h2><p>注册允许多种实现同时存在；绑定配置明确每个规划器的 IK 依赖和任务运行环境。</p></div>
+      </div>
+      <div class="code-panel"><pre><code id="manifest-code"></code></pre></div>
+    </section>
+
+    <div class="callout section">
+      <strong>当前迁移策略：</strong>
+      现有 Python `robot_motion_digital_twin` 可以先通过适配器接入；随后优先对齐速度字段、插值配置、反馈与故障语义。
+      是否引入动力学引擎是第二阶段问题，不应阻塞运行合同规范化。
+    </div>
+
+    <p class="footer-note">运行时包是启动组合，不是要求把所有适配器写在同一个大类中。</p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

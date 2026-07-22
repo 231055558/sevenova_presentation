@@ -1,0 +1,134 @@
+digraph ExecutionClosedLoop {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad=0.25,
+    nodesep=0.27,
+    ranksep=0.62,
+    splines=polyline,
+    compound=true,
+    newrank=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=10.5,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.15,
+    margin="0.13,0.09"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=8.8,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.25,
+    arrowsize=0.7
+  ];
+
+  subgraph cluster_planning {
+    label="运控计算域：非硬实时";
+    labelloc=t;
+    labeljust=l;
+    color="#76513b";
+    fillcolor="#f4e8d7";
+    style="rounded,filled";
+
+    path [label="Planner\n几何路径 / 语义片段"];
+    compose [label="TrajectoryComposer\n拼接 + 双臂同步"];
+    smooth [label="Smoother\n连续性 + 约束"];
+    timing [label="TimeParameterizer\nposition + velocity\nacceleration + time", fillcolor="#ddc7aa", penwidth=1.7];
+    validate [label="TrajectoryValidator\n字段 / 限位 / snapshot / profile"];
+
+    path -> compose -> smooth -> timing -> validate;
+    { rank=same; path; compose; smooth; timing; validate; }
+  }
+
+  subgraph cluster_supervision {
+    label="执行监督域：非硬实时状态机";
+    labelloc=t;
+    labeljust=l;
+    color="#687157";
+    fillcolor="#ece7d8";
+    style="rounded,filled";
+
+    precheck [label="ExecutionSupervisor\n起点 + 场景 + 资源复核", fillcolor="#687157", fontcolor="#fffaf0"];
+    monitor [label="ExecutionSupervisor\naccepted / progress / cancel / final", fillcolor="#687157", fontcolor="#fffaf0"];
+    final [label="MotionEngine\n继续 / 重规划 / 终止"];
+
+    precheck -> monitor [label="goal accepted"];
+    monitor -> final [label="typed Result"];
+    { rank=same; precheck; monitor; final; }
+  }
+
+  subgraph cluster_adapter {
+    label="Adapter Seam";
+    labelloc=t;
+    labeljust=l;
+    color="#9b6548";
+    fillcolor="#efe1cf";
+    style="rounded,filled";
+
+    capability [label="ExecutionCapabilities\nprofile / fields / joints / stop"];
+    adapter [label="ExecutionAdapter\nname / order / sign / unit\nprotocol + error mapping"];
+    { rank=same; capability; adapter; }
+  }
+
+  subgraph cluster_realtime {
+    label="主站实时域：确定性控制周期";
+    labelloc=t;
+    labeljust=l;
+    color="#4b2f22";
+    fillcolor="#eadbc6";
+    style="rounded,filled";
+    penwidth=1.5;
+
+    buffer [label="完整缓存轨迹\n启动前校验", fillcolor="#fffaf0"];
+    interpolate [label="实时插值\n共享单调时钟\n多轴同步", fillcolor="#4b2f22", fontcolor="#fff8ed", penwidth=1.8];
+    setpoint [label="EtherCAT setpoint\n每控制周期"];
+    drives [label="驱动器\nposition / velocity / current loop"];
+    safety [label="快速安全\nwatchdog / following error\nfault / emergency stop", fillcolor="#f4dfd7", color="#8a4037"];
+
+    buffer -> interpolate -> setpoint -> drives;
+    drives -> safety [label="encoder / drive state", constraint=false];
+    { rank=same; buffer; interpolate; setpoint; drives; safety; }
+  }
+
+  subgraph cluster_parallel {
+    label="独立执行器与语义 Barrier";
+    labelloc=t;
+    labeljust=l;
+    color="#ad784c";
+    fillcolor="#f5ead8";
+    style="rounded,filled";
+
+    pp [label="PP / updown\n独立 profile command"];
+    tool [label="Tool IO\nvacuum / valve"];
+    barrier [label="MotionEngine Barrier\n等待确认再进入下一段"];
+    pp -> barrier;
+    tool -> barrier;
+    { rank=same; pp; tool; barrier; }
+  }
+
+  validate -> precheck [label="TimedJointTrajectory\nvelocity 必需", penwidth=1.7, weight=20];
+  capability -> validate [label="startup contract", style=dashed];
+  precheck -> adapter [label="完整轨迹 + deadline", weight=20];
+  adapter -> buffer [label="buffered execute", weight=20];
+  capability -> adapter [label="binding", style=dashed];
+
+  interpolate -> monitor [label="desired(t)", color="#687157", fontcolor="#687157", constraint=false];
+  drives -> monitor [label="actual(t) + error(t)", color="#687157", fontcolor="#687157", constraint=false];
+  safety -> monitor [label="fault / stop result", color="#8a4037", fontcolor="#8a4037", constraint=false];
+  monitor -> adapter [label="cancel / controlled stop", color="#8a4037", fontcolor="#8a4037", constraint=false];
+
+  final -> pp [label="stage command"];
+  final -> tool [label="stage command"];
+  safety -> pp [style=invis, weight=100];
+  barrier -> final [label="confirmed Result", constraint=false];
+}

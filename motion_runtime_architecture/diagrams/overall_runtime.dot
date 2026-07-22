@@ -1,0 +1,167 @@
+digraph OverallRuntime {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad=0.24,
+    nodesep=0.30,
+    ranksep=0.55,
+    splines=polyline,
+    compound=true,
+    newrank=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=10.5,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.15,
+    margin="0.13,0.09"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=8.5,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.2,
+    arrowsize=0.68
+  ];
+
+  subgraph cluster_startup {
+    label="01  启动组合 · 请求入口尚未开放";
+    labelloc=t;
+    labeljust=l;
+    color="#76513b";
+    fillcolor="#f4e8d7";
+    style="rounded,filled";
+    penwidth=1.35;
+
+    manifest [label="Runtime Manifest\nRobot / Task / Runtime Pack"];
+    application [label="MotionApplication\ncomposition root", fillcolor="#4b2f22", fontcolor="#fff8ed"];
+    registry [label="Typed RegistryHub\nOPEN → FROZEN"];
+    compiler [label="WorkflowCompiler\nYAML → CompiledWorkflow"];
+    runtime_graph [label="RuntimeGraph\n角色 → 具体实例", fillcolor="#ddc7aa", penwidth=1.6];
+    readiness [label="Compatibility + Health\nREADY / STARTUP_FAILED"];
+
+    manifest -> application [label="compose"];
+    application -> registry [label="install packs"];
+    manifest -> compiler [label="workflow"];
+    registry -> runtime_graph [label="factories"];
+    compiler -> runtime_graph [label="task graph"];
+    runtime_graph -> readiness [label="validate + warmup"];
+
+    { rank=same; registry; compiler; }
+  }
+
+  subgraph cluster_facts {
+    label="02  任务入口与版本化事实";
+    labelloc=t;
+    labeljust=l;
+    color="#b79a7f";
+    fillcolor="#eadbc6";
+    style="rounded,filled";
+
+    ingress [label="Task Ingress\nROS / CLI / IPC"];
+    state [label="Robot State\n真机 / Twin / Replay"];
+    scene [label="Scene + Tool + TF\n版本化事实"];
+    snapshot [label="SnapshotManager\n固定 MotionSnapshot", fillcolor="#efe1cf"];
+
+    state -> snapshot [label="version"];
+    scene -> snapshot [label="version"];
+    { rank=same; ingress; state; scene; }
+  }
+
+  subgraph cluster_job {
+    label="03  单次 MotionJob · 只有 Mailbox 写状态";
+    labelloc=t;
+    labeljust=l;
+    color="#76513b";
+    fillcolor="#fff7ea";
+    style="rounded,filled";
+    penwidth=1.35;
+
+    jobs [label="JobManager\n准入 / 幂等 / 取消"];
+    resources [label="ResourceScheduler\nrobot / arms / PP / tool"];
+    mailbox [label="MotionJob Mailbox\n有序接收 Result", fillcolor="#ddc7aa", penwidth=1.6];
+    engine [label="MotionEngine\nstate + result → commands", fillcolor="#4b2f22", fontcolor="#fff8ed"];
+    scheduler [label="OperationScheduler\n有界 worker + cancel"];
+
+    jobs -> mailbox [label="create"];
+    mailbox -> engine [label="state + Result"];
+    engine -> mailbox [label="new state", color="#9b6548", fontcolor="#9b6548", constraint=false];
+    engine -> scheduler [label="Command", penwidth=1.6];
+    resources -> scheduler [label="lease"];
+
+    { rank=same; jobs; resources; }
+    { rank=same; mailbox; engine; scheduler; }
+  }
+
+  subgraph cluster_work {
+    label="04  可替换能力 Seam 与执行生命周期";
+    labelloc=t;
+    labeljust=l;
+    color="#8b6b58";
+    fillcolor="#f1e7d7";
+    style="rounded,filled";
+    penwidth=1.25;
+
+    ik [label="IK Family\nsolver / candidates"];
+    planning [label="Planning Family\nextract / loaded"];
+    primitive [label="Primitive + Tool\nattach / release / barrier"];
+    trajectory [label="TrajectoryPipeline\ncompose → timing → validate", fillcolor="#ddc7aa"];
+    supervisor [label="ExecutionSupervisor\nstart / progress / cancel / final", fillcolor="#687157", fontcolor="#fffaf0"];
+    adapter [label="ExecutionAdapter\nname / order / sign / unit"];
+    provider [label="Runtime Provider\nReal / Twin / Fake / Replay"];
+
+    ik -> planning [label="typed dependency"];
+    planning -> trajectory [label="segments"];
+    trajectory -> supervisor [label="position + velocity\n+ time_from_start", penwidth=1.6];
+    supervisor -> adapter [label="timed trajectory"];
+    adapter -> provider [label="buffered execute"];
+
+    { rank=same; ik; planning; primitive; trajectory; }
+    { rank=same; supervisor; adapter; provider; }
+  }
+
+  subgraph cluster_observe {
+    label="05  观察面 · 不拥有执行权";
+    labelloc=t;
+    labeljust=l;
+    color="#9b6548";
+    fillcolor="#efe1cf";
+    style="rounded,filled";
+
+    eventhub [label="EventHub\n低频领域事实"];
+    telemetry [label="TelemetryStream\n高频状态"];
+    observers [label="JSONL / Rerun / RViz\nmetrics / ROS feedback"];
+
+    eventhub -> observers;
+    telemetry -> observers;
+    { rank=same; eventhub; telemetry; observers; }
+  }
+
+  readiness -> ingress [label="open ingress", weight=20];
+  ingress -> jobs [label="MotionTaskRequest"];
+  snapshot -> mailbox [label="pin snapshot"];
+  snapshot -> jobs [style=invis, weight=100];
+  runtime_graph -> jobs [label="frozen handles"];
+
+  scheduler -> ik [label="solve"];
+  scheduler -> planning [label="plan"];
+  scheduler -> primitive [label="act"];
+  scheduler -> supervisor [label="execute"];
+
+  ik -> mailbox [label="Result", color="#9b6548", fontcolor="#9b6548", style=dashed, constraint=false];
+  planning -> mailbox [label="Result", color="#9b6548", fontcolor="#9b6548", style=dashed, constraint=false];
+  supervisor -> mailbox [label="Result", color="#9b6548", fontcolor="#9b6548", style=dashed, constraint=false];
+
+  engine -> eventhub [label="Event", color="#9b6548", fontcolor="#9b6548", style=dashed];
+  supervisor -> eventhub [label="Event", color="#9b6548", fontcolor="#9b6548", style=dashed];
+  provider -> telemetry [label="desired / actual / error", color="#687157", fontcolor="#687157", style=dashed, weight=20];
+  telemetry -> snapshot [label="latest + history", color="#687157", fontcolor="#687157", style=dashed, constraint=false];
+}

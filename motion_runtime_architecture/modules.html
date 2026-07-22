@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>局部模块 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="modules">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><h1 id="site-title"></h1><p id="site-meta"></p></div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-copy">
+        <span class="kicker">模块接口 · 不变量 · 错误 · 测试</span>
+        <h2>每个局部都要隐藏复杂度，而不是制造更多转发层。</h2>
+        <p>展开模块可以看到它拥有的责任、接口输入输出、不变量、结构化错误、建议技术和测试面。</p>
+      </div>
+      <aside class="hero-aside">
+        <strong>判断是否值得独立</strong>
+        <p>删除这个模块后，复杂度是否会重新散落到多个调用者？若不会，它可能只是一个浅层转发层。</p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">L2 · 运行时容器</span>
+          <h2>一次任务由哪些责任域协作完成</h2>
+          <p>本图展开运控运行时内部，只展示稳定责任和主方向。类继承、注册表结构与技术依赖在模块清单中单独说明。</p>
+        </div>
+        <span class="diagram-scope">面向：架构设计与实现人员</span>
+      </div>
+      <figure class="architecture-figure">
+        <div class="diagram-layout container-layout">
+          <div class="container-map" role="img" aria-label="运控运行时的应用组合、任务管理、决策引擎、能力调度、轨迹管线、执行监督和观察出口">
+            <aside class="container-external external-inputs">
+              <span class="boundary-label">外部输入</span>
+              <article><strong>任务入口</strong><p>任务意图与参数</p><span>01</span></article>
+              <article><strong>事实源</strong><p>机器人 / 场景 / 标定</p><span>02</span></article>
+            </aside>
+
+            <section class="runtime-boundary">
+              <header class="runtime-boundary-title">
+                <div><span>系统边界</span><h3>运控运行时</h3></div>
+                <code>robot_motion_control</code>
+              </header>
+
+              <article class="runtime-strip composition-strip">
+                <div><span class="module-index">启动期</span><h4>应用组合</h4></div>
+                <p>加载清单、注册实现、验证兼容性，冻结本进程依赖图。</p>
+                <code>Composition Root</code>
+              </article>
+
+              <div class="runtime-main-flow">
+                <article class="runtime-module">
+                  <span class="module-index">01</span><h4>任务管理</h4>
+                  <p>建立任务上下文，固定事实快照，管理取消与结果。</p>
+                  <code>Job Manager</code>
+                </article>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <article class="runtime-module featured-module">
+                  <span class="module-index">02</span><h4>决策引擎</h4>
+                  <p>解释任务流程，选择下一项操作，不直接依赖外部框架。</p>
+                  <code>Motion Engine</code>
+                </article>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <article class="runtime-module">
+                  <span class="module-index">03</span><h4>能力调度</h4>
+                  <p>按能力要求绑定 IK、规划与轨迹实现，执行有界并发。</p>
+                  <code>Capability Scheduler</code>
+                </article>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <article class="runtime-module">
+                  <span class="module-index">04</span><h4>轨迹管线</h4>
+                  <p>拼接、平滑、时间参数化并验证可执行合同。</p>
+                  <code>Trajectory Pipeline</code>
+                </article>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <article class="runtime-module">
+                  <span class="module-index">05</span><h4>执行监督</h4>
+                  <p>提交轨迹、跟踪状态，收敛完成、取消与故障。</p>
+                  <code>Execution Supervisor</code>
+                </article>
+              </div>
+
+              <article class="runtime-strip observation-strip">
+                <div><span class="module-index">旁路</span><h4>观察出口</h4></div>
+                <p>统一发布结构化事件、日志、指标和可回放记录，不反向控制业务。</p>
+                <code>Event + Telemetry</code>
+              </article>
+            </section>
+
+            <aside class="container-external external-outputs">
+              <span class="boundary-label">可替换实现</span>
+              <article><strong>运行时包</strong><p>真机 / 孪生 / 仿真 / 测试</p><span>03</span></article>
+              <article><strong>观察工具</strong><p>日志 / 指标 / 可视化 / 回放</p><span>04</span></article>
+            </aside>
+          </div>
+
+          <div class="container-reading-key">
+            <strong>主路径</strong>
+            <span>任务管理 → 决策引擎 → 能力调度 → 轨迹管线 → 执行监督</span>
+            <strong>两条横切规则</strong>
+            <span>应用组合只发生在启动期；观察出口只旁路复制事实。</span>
+          </div>
+        </div>
+        <figcaption class="diagram-caption">
+          <span><i class="block-key core"></i>核心决策责任</span>
+          <span><i class="block-key module"></i>运行时内部责任</span>
+          <span><i class="block-key adapter"></i>边界之外的实现</span>
+          <span>箭头只表示任务主方向，不表示对象持有关系。</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">架构清单</span><h2>主要模块</h2><p>这里只列需要形成稳定责任和测试面的模块，不要求一类一文件或一类一软件包。</p></div>
+        <span id="module-count" class="badge muted"></span>
+      </div>
+      <div class="module-toolbar">
+        <input id="module-search" class="search-input" type="search" placeholder="搜索模块、错误、技术或责任…" aria-label="搜索模块">
+      </div>
+      <div id="module-filters" class="filter-row"></div>
+      <div id="module-grid" class="module-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">类型化能力家族</span><h2>按能力家族注册</h2><p>父类可共享元数据，但实际调用使用准确接口。只有真正变化的地方才形成可替换边界。</p></div>
+      </div>
+      <div id="interface-families" class="family-grid"></div>
+    </section>
+
+    <div class="callout section">
+      <strong>关于子类独有能力：</strong>
+      独有方法作为实现内部工具完全合理；若多个调用者依赖它，应形成更准确的接口；若规划器与某个 IK 数学上不可分割，
+      则作为一个组合实现注册，不必假装任意替换。
+    </div>
+
+    <p class="footer-note">模块命名仍处于目标架构阶段；只有经过第一条纵向切片验证后才冻结到代码。</p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

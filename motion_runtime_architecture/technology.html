@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技术栈与迁移 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="technology">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><h1 id="site-title"></h1><p id="site-meta"></p></div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-copy">
+        <span class="kicker">C++ 运行核心 · Python 工具 · ROS 适配 · 分阶段迁移</span>
+        <h2>生产运行核心以 C++ 为主，Python 专注工具、实验和分析。</h2>
+        <p>技术选择服从依赖方向和测试需求：C++ 负责确定性运行与算法集成，Python 负责配置工具、实验、数据分析和可视化，ROS 负责跨进程适配。</p>
+      </div>
+      <aside class="hero-aside">
+        <strong>迁移原则</strong>
+        <p>先建立薄骨架和确定性测试纵向链，再包装当前成熟实现。文件物理搬迁晚于接口和测试稳定。</p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">L5 · 技术依赖与迁移</span>
+          <h2>目标依赖与迁移门禁</h2>
+          <p>第一张图约束最终代码的依赖方向，第二张图约束到达目标的顺序；任何阶段都不能让新旧链同时拥有真实执行权。</p>
+        </div>
+      </div>
+      <div class="diagram-stack">
+        <div>
+          <div class="diagram-subheading">
+            <h3>目标技术与软件包依赖</h3>
+            <span class="diagram-scope">依赖方向：外部工具 → 稳定核心</span>
+          </div>
+          <figure class="architecture-figure">
+            <div class="diagram-layout technology-layer-layout">
+              <div class="technology-layer-board" role="img" aria-label="应用选择、外部适配、运行组合、运行核心和领域核心五层技术依赖，依赖只能向稳定核心方向进入">
+                <div class="dependency-axis"><span>外部变化更快</span><i></i><strong>依赖只能向稳定核心</strong></div>
+                <section class="tech-band tech-entry"><header><span>05</span><strong>应用选择与工具</strong><small>启动入口</small></header><div><b>运行清单</b><b>配置校验</b><b>实验与分析</b><b>可视化工具</b></div><em>C++ / Python / YAML</em></section>
+                <section class="tech-band tech-adapter"><header><span>04</span><strong>外部框架适配</strong><small>变化隔离层</small></header><div><b>ROS2 入口</b><b>MoveIt 规划</b><b>EtherCAT 执行</b><b>数字孪生</b></div><em>rclcpp / MoveIt2 / 自定义协议</em></section>
+                <section class="tech-band tech-pack"><header><span>03</span><strong>可组合能力包</strong><small>启动安装</small></header><div><b>任务包</b><b>算法实现</b><b>运行时包</b><b>观察者</b></div><em>C++ + 声明式配置</em></section>
+                <section class="tech-band tech-runtime"><header><span>02</span><strong>运控运行核心</strong><small>确定性热路径</small></header><div><b>注册与依赖图</b><b>任务与状态机</b><b>快照与资源</b><b>有界调度</b></div><em>C++17/20</em></section>
+                <section class="tech-band tech-core"><header><span>01</span><strong>领域核心</strong><small>最稳定</small></header><div><b>领域类型</b><b>准确接口</b><b>结构化错误</b><b>纯逻辑与不变量</b></div><em>无 ROS / MoveIt / 硬件类型</em></section>
+              </div>
+            </div>
+            <figcaption class="diagram-caption">
+              <span><i class="block-key core"></i>C++ 稳定核心</span>
+              <span><i class="block-key module"></i>运行核心与能力包</span>
+              <span><i class="block-key adapter"></i>外部适配与工具</span>
+              <span><i class="line-key prohibited"></i>Python 不进入热路径</span>
+            </figcaption>
+          </figure>
+        </div>
+        <div>
+          <div class="diagram-subheading">
+            <h3>阶段、证据与唯一执行权威</h3>
+            <span class="diagram-scope">任何阶段只有一个真实执行权威</span>
+          </div>
+          <figure class="architecture-figure">
+            <div class="diagram-layout migration-board-layout">
+              <div class="migration-board" role="img" aria-label="从合同基线、无 ROS 纵向链、成熟算法接入、数字孪生对齐、影子比较到切换执行权威的六阶段迁移路线">
+                <header><span>阶段</span><span>本阶段只完成一件事</span><span>离开本阶段所需证据</span></header>
+                <article><b>P0</b><div><strong>冻结领域合同</strong><small>请求、结果、错误、轨迹与时间语义</small></div><span>合同测试 + 决策记录</span></article>
+                <article><b>P1</b><div><strong>跑通无 ROS 纵向链</strong><small>启动、任务、测试运行时、结果与事件</small></div><span>确定性端到端测试</span></article>
+                <article><b>P2</b><div><strong>包装当前成熟算法</strong><small>通过准确接口接入，不先物理搬迁文件</small></div><span>结果对比 + 错误映射</span></article>
+                <article><b>P3</b><div><strong>对齐数字孪生合同</strong><small>速度、插值、反馈、取消与故障语义</small></div><span>孪生一致性测试</span></article>
+                <article><b>P4</b><div><strong>只读影子比较</strong><small>新链规划和记录，仍由旧链执行真机</small></div><span>现场数据差异报告</span></article>
+                <article><b>P5</b><div><strong>切换唯一执行权威</strong><small>通过人工门禁后由新链独占真实执行</small></div><span>软件在环 + 硬件在环验收</span></article>
+                <div class="execution-authority"><strong>真实执行权威</strong><span class="authority-old">P0—P4：现有链</span><span class="authority-new">P5：新运行时</span></div>
+              </div>
+            </div>
+            <figcaption class="diagram-caption">
+              <span><i class="line-key command"></i>迁移主路径</span>
+              <span><i class="block-key gate"></i>阶段验收 Gate</span>
+              <span><i class="block-key risk"></i>真实执行权威</span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">技术选型</span><h2>分层技术栈</h2><p>这是推荐基线；标记为候选的库应通过最小原型和部署环境确认后再冻结。</p></div>
+      </div>
+      <div id="stack-layers" class="stack-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">目标仓库结构</span><h2>目标软件包布局</h2><p>不创建一个长期 `v2/` 复制树，也不把每个类拆成软件包。新核心与当前包并存，逐步通过适配器接入。</p></div>
+      </div>
+      <div id="target-packages" class="package-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">依赖方向</span><h2>依赖只能朝向稳定接口</h2><p>核心不知道 ROS、MoveIt 或真机；适配器可以依赖核心和外部框架，但不能让外部类型反向渗入决策引擎。</p></div>
+      </div>
+      <div id="dependency-rules" class="pair-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">配置归属</span><h2>配置文件按责任分开</h2><p>流程配置描述步骤，运行配置描述组合，算法配置描述实现参数；安全事实由机器人与执行配置管理。</p></div>
+      </div>
+      <div id="config-files" class="data-table"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">迁移路径</span><h2>从设计基线到唯一运行权威</h2><p>先建立薄骨架，随后纵向替换适配器；新旧链并行比较时，新链只规划不执行，避免双执行权威。</p></div>
+      </div>
+      <div id="migration-phases" class="migration-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">非目标</span><h2>第一轮明确不做什么</h2><p>限制范围是防止架构工程重新变成巨型重写的必要部分。</p></div>
+      </div>
+      <div id="non-goals" class="panel"></div>
+    </section>
+
+    <p class="footer-note">下一次实现工作应从第一阶段的无 ROS 测试纵向链开始，而不是先移动现有规划算法文件。</p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

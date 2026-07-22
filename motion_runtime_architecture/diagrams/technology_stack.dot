@@ -1,0 +1,72 @@
+digraph TechnologyStack {
+  graph [
+    rankdir=BT,
+    bgcolor="transparent",
+    pad=0.24,
+    nodesep=0.32,
+    ranksep=0.58,
+    splines=polyline,
+    compound=true,
+    newrank=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=10.5,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.15,
+    margin="0.14,0.09"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=8.5,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.2,
+    arrowsize=0.68
+  ];
+
+  core [label="robot_motion_core · C++17/20\n领域类型 / Interface / Error / pure logic", fillcolor="#4b2f22", fontcolor="#fff8ed", penwidth=1.7];
+  runtime [label="robot_motion_runtime · C++\nRegistryHub / RuntimeGraph / Job / Scheduler", fillcolor="#ddc7aa"];
+  tasks [label="Task Pack · C++ + YAML\nWorkflow / Primitive / Policy / Resource"];
+  algorithms [label="Algorithm Implementation · C++\nIK / planning / trajectory"];
+  runtimepacks [label="Runtime Pack · C++ / current Python Adapter\nreal / twin / fake / replay"];
+  observers [label="Observer + tooling · Python/C++\nRerun / JSONL / metrics / analysis"];
+  ros [label="ROS2 Adapter · rclcpp\naction / topic / TF2 / lifecycle"];
+  moveit [label="MoveIt Adapter · C++\nMoveIt2 / OMPL / FCL / BioIK"];
+  hardware [label="Hardware Adapter\nEtherCAT protocol / tool IO"];
+  twin [label="Twin Adapter\nTwinWorld / clock / fault injection"];
+  config [label="Configuration + schema\nYAML-CPP / JSON Schema / generated docs"];
+  app [label="MotionApplication\ncomposition root + launch selection", fillcolor="#687157", fontcolor="#fffaf0"];
+
+  runtime -> core;
+  tasks -> runtime;
+  tasks -> core;
+  algorithms -> core;
+  runtimepacks -> runtime;
+  runtimepacks -> core;
+  observers -> core;
+  ros -> runtime;
+  moveit -> algorithms;
+  hardware -> runtimepacks;
+  twin -> runtimepacks;
+  config -> tasks;
+  config -> runtimepacks;
+  app -> tasks;
+  app -> runtimepacks;
+  app -> observers;
+  app -> ros;
+
+  { rank=same; runtime; algorithms; }
+  { rank=same; tasks; runtimepacks; observers; }
+  { rank=same; ros; moveit; hardware; twin; config; }
+
+  python [shape=note, label="Python 不进入 MotionEngine 热路径\n用于实验、配置工具、分析、现有 Twin 过渡", fillcolor="#f4dfd7", color="#8a4037", fontcolor="#8a4037"];
+  python -> core [arrowhead=tee, style=dashed, color="#8a4037", constraint=false];
+}

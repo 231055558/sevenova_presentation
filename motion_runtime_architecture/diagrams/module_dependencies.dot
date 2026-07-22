@@ -1,0 +1,69 @@
+digraph ModuleDependencies {
+  graph [
+    rankdir=BT,
+    bgcolor="transparent",
+    pad=0.28,
+    nodesep=0.34,
+    ranksep=0.65,
+    splines=polyline,
+    compound=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=11,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.2,
+    margin="0.15,0.1"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=9,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.25,
+    arrowsize=0.72
+  ];
+
+  core [label="robot_motion_core\n领域类型 / Error / Result / Command / Event\nSnapshot / TimedJointTrajectory / Capability Interface", fillcolor="#4b2f22", fontcolor="#fff8ed", penwidth=1.8];
+
+  runtime [label="robot_motion_runtime\nRegistryHub / RuntimeGraph / WorkflowCompiler\nJobManager / MotionEngine / Scheduler / Supervisor", fillcolor="#ddc7aa", penwidth=1.6];
+  tasks [label="Task Pack\nWorkflow / Primitive / Policy / Resource", fillcolor="#efe1cf"];
+  algorithms [label="Algorithm Implementation\nIK / Extract / Loaded / Trajectory", fillcolor="#fffaf0"];
+  runtimepacks [label="Runtime Pack\nReal / Twin / Fake / Replay", fillcolor="#e2e4d5"];
+  observers [label="Observer Pack\nJSONL / Rerun / Metrics", fillcolor="#efe1cf"];
+
+  ros [label="ROS Adapter\nrclcpp / action / topic / TF2", fillcolor="#fffaf0"];
+  moveit [label="MoveIt Adapter\nMoveIt2 / OMPL / FCL / BioIK", fillcolor="#fffaf0"];
+  hardware [label="Hardware Adapter\nEtherCAT 主站 / Tool IO", fillcolor="#fffaf0"];
+  twin [label="Twin Adapter\nTwinWorld / Clock / FaultInjector", fillcolor="#fffaf0"];
+  app [label="MotionApplication\nComposition Root", fillcolor="#687157", fontcolor="#fffaf0", penwidth=1.7];
+
+  runtime -> core [label="only stable domain"];
+  tasks -> runtime [label="extension Interface"];
+  tasks -> core;
+  algorithms -> core [label="implements family"];
+  runtimepacks -> runtime [label="install adapters"];
+  runtimepacks -> core;
+  observers -> core [label="consume Event / Telemetry"];
+
+  ros -> runtime [label="convert ingress / result"];
+  ros -> core;
+  moveit -> algorithms [label="concrete backend"];
+  hardware -> runtimepacks [label="real provider"];
+  twin -> runtimepacks [label="sim provider"];
+
+  app -> tasks [label="install"];
+  app -> runtimepacks [label="select"];
+  app -> observers [label="install"];
+  app -> ros [label="open last"];
+
+  external [shape=note, label="禁止反向渗透\ncore 不认识 ROS / MoveIt / EtherCAT / Python runtime", color="#8a4037", fontcolor="#8a4037", fillcolor="#f4dfd7", penwidth=1.5];
+  external -> core [style=dashed, arrowhead=tee, color="#8a4037", constraint=false];
+}

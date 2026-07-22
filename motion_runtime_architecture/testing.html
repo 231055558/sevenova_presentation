@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试与模拟 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="testing">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><h1 id="site-title"></h1><p id="site-meta"></p></div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-copy">
+        <span class="kicker">无 ROS → 数字孪生 → ROS 集成 → 软件在环 → 硬件在环</span>
+        <h2>每一级测试都模拟它能负责的世界，并明确不能证明什么。</h2>
+        <p>先用确定性测试替身验证流程，再用数字孪生验证时间与状态，最后用主站软件在环和硬件在环验证真实执行合同；不能把 RViz 动起来等同于真机可靠。</p>
+      </div>
+      <aside class="hero-aside">
+        <strong>测试核心</strong>
+        <p>稳定接口就是测试面。测试替身和真实适配器接收相同命令、返回相同结果类型，才能系统覆盖失败与恢复路径。</p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">L4 · 验证阶梯</span>
+          <h2>现实程度逐级增加，结论边界始终明确</h2>
+          <p>每一级只增加一类新的现实因素，并说明它能证明什么；高等级验证不替代低等级的快速门禁。</p>
+        </div>
+        <span class="diagram-scope">日常主力：L0—L2 · 实机门禁：L5</span>
+      </div>
+      <figure class="architecture-figure">
+        <div class="diagram-layout test-ladder-layout">
+          <div class="test-ladder-board" role="img" aria-label="从纯领域测试到真机验收的六级验证阶梯，每一级列出新增现实因素、主要证据和运行门禁">
+            <header>
+              <span>级别</span><span>测试环境</span><span>本级新增现实</span><span>主要证明</span><span>门禁</span>
+            </header>
+            <article class="verification-band level-l0">
+              <strong class="test-level-id">L0</strong>
+              <div><strong>纯领域测试</strong><small>单元测试 · 属性测试 · 内存数据</small></div>
+              <div><span>无外部框架</span><small>流程编译、决策、轨迹验证、错误映射</small></div>
+              <div><strong>逻辑与不变量</strong><small>不能证明集成、时序或硬件行为</small></div>
+              <b>每次修改</b>
+            </article>
+            <article class="verification-band level-l1">
+              <strong class="test-level-id">L1</strong>
+              <div><strong>无 ROS 完整任务</strong><small>测试运行时 · 脚本化算法 · 完整任务邮箱</small></div>
+              <div><span>增加任务编排</span><small>准入、并发、取消、结果与恢复路径</small></div>
+              <div><strong>端到端控制流</strong><small>不能证明真实时间、传输或设备合同</small></div>
+              <b>每次提交</b>
+            </article>
+            <article class="verification-band level-l2">
+              <strong class="test-level-id">L2</strong>
+              <div><strong>数字孪生</strong><small>真实流程与算法 · 仿真时钟 · 状态推进</small></div>
+              <div><span>增加时间与状态</span><small>插值、延迟、陈旧状态、跟踪误差</small></div>
+              <div><strong>执行合同与动态行为</strong><small>不能证明 ROS 传输和真实硬件</small></div>
+              <b>合并前</b>
+            </article>
+            <article class="verification-band level-l3">
+              <strong class="test-level-id">L3</strong>
+              <div><strong>ROS 集成</strong><small>真实节点 · 模拟提供者 · 启动测试</small></div>
+              <div><span>增加跨进程传输</span><small>消息转换、生命周期、服务质量、取消超时</small></div>
+              <div><strong>适配层与部署集成</strong><small>不能证明生产主站协议</small></div>
+              <b>集成构建</b>
+            </article>
+            <article class="verification-band level-l4">
+              <strong class="test-level-id">L4</strong>
+              <div><strong>主站软件在环</strong><small>生产执行适配器 · 主站模拟器 · 驱动故障</small></div>
+              <div><span>增加生产协议</span><small>缓存、插值、看门狗、错误翻译与期限</small></div>
+              <div><strong>运控与电控合同一致性</strong><small>不能证明方向、零位和物理链</small></div>
+              <b>发布候选</b>
+            </article>
+            <article class="verification-band level-l5">
+              <strong class="test-level-id">L5</strong>
+              <div><strong>硬件在环 / 真机</strong><small>人工安全确认 · 低速小幅 · 空载到负载</small></div>
+              <div><span>增加物理证据</span><small>方向、零位、时序、跟随误差与停止链</small></div>
+              <div><strong>真实设备验收证据</strong><small>结果绑定具体机器人配置与测试条件</small></div>
+              <b>人工门禁</b>
+            </article>
+          </div>
+          <div class="test-ladder-axis"><span>更快、更确定</span><i></i><span>更真实、更昂贵</span></div>
+        </div>
+        <figcaption class="diagram-caption">
+          <span><i class="block-key core"></i>L0-L1 日常门禁</span>
+          <span><i class="block-key twin"></i>L2-L3 时间与集成</span>
+          <span><i class="block-key supervision"></i>L4 生产协议</span>
+          <span><i class="block-key risk"></i>L5 人工安全门禁</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">分级说明</span><h2>六级验证梯度</h2><p>越靠下越真实、越昂贵；L0/L1 必须足够快，成为日常修改的基础门禁。</p></div>
+      </div>
+      <div id="test-levels" class="test-levels"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">测试替身</span><h2>为完整任务链需要模拟的部分</h2><p>不仅模拟机械臂，还要模拟任务源、场景、时间、算法结果、工具、主站错误和观察者故障。</p></div>
+      </div>
+      <div id="test-doubles" class="double-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">故障注入</span><h2>必须主动制造的失败</h2><p>仅测试成功路径无法证明架构能定位问题。每类失败都应产生稳定错误码、关联 ID 和事件链。</p></div>
+      </div>
+      <div id="fault-grid" class="fault-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">纵向切片</span><h2>建议的纵向验收切片</h2><p>每个切片从入口穿到结果，避免“所有 IK 都改完但还没有一条任务能跑”的横向大重构。</p></div>
+      </div>
+      <div id="acceptance-slices" class="slice-list"></div>
+    </section>
+
+    <div class="callout section">
+      <strong>实机测试限制：</strong>
+      HIL/真机测试必须经过人工安全确认，从单段、小幅、低速、空载开始；本门户和自动测试不授权任何真实硬件动作。
+    </div>
+
+    <p class="footer-note">数字孪生负责提高覆盖率和诊断效率，但不能代替方向、零位、跟随误差和安全链的真机验收。</p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
