@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>轨迹与执行 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="execution">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><h1 id="site-title"></h1><p id="site-meta"></p></div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-copy">
+        <span class="kicker">定时轨迹 · 速度 · 实时插值</span>
+        <h2>运控定义完整定时轨迹，主站忠实地实时执行。</h2>
+        <p>
+          轨迹点不仅有位置：`velocities` 是强制发送字段，`accelerations` 由执行 profile 声明。
+          运控完成拼接、平滑、时间参数化和合同验证；EtherCAT 主站完整缓存后按控制周期插值。
+        </p>
+      </div>
+      <aside class="hero-aside">
+        <strong>本页最重要的结论</strong>
+        <p>把实时插值搬到普通 ROS 或运控进程不会更实时。真正的实时采样应留在靠近硬件、时钟确定的运行时提供者。</p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">D1 · 轨迹执行时序</span>
+          <h2>一条定时轨迹如何被执行并收口</h2>
+          <p>本图只讲一个正常执行用例及其收口点。每行是一条有方向的交互，反馈沿独立行返回，因此没有交叉连线。</p>
+        </div>
+        <span class="diagram-scope">场景：批量轨迹执行</span>
+      </div>
+      <figure class="architecture-figure">
+        <div class="diagram-layout sequence-layout">
+          <div class="sequence-board" role="img" aria-label="任务决策、轨迹管线、执行监督、运行时适配和主站或孪生之间的七步轨迹执行时序">
+            <div class="sequence-head" aria-hidden="true">
+              <div><strong>任务决策</strong><code>Motion Engine</code></div>
+              <div><strong>轨迹管线</strong><code>Trajectory Pipeline</code></div>
+              <div><strong>执行监督</strong><code>Execution Supervisor</code></div>
+              <div><strong>运行时适配</strong><code>Execution Adapter</code></div>
+              <div><strong>主站 / 孪生</strong><code>Runtime Provider</code></div>
+            </div>
+
+            <div class="sequence-row">
+              <div class="sequence-message forward span-1-2"><span class="sequence-number">01</span><strong>提交几何路径与约束</strong><small>路径片段、语义边界、速度与加速度限制</small><em>任务决策 → 轨迹管线</em></div>
+            </div>
+            <div class="sequence-row">
+              <div class="sequence-message self span-2"><span class="sequence-number">02</span><strong>生成定时轨迹</strong><small>拼接、平滑、时间参数化；每点含位置、速度和 time_from_start</small><em>轨迹管线内部处理</em></div>
+            </div>
+            <div class="sequence-row">
+              <div class="sequence-message forward span-2-3"><span class="sequence-number">03</span><strong>提交已验证的执行合同</strong><small>关节顺序、连续性、导数、时间单调性、运行时能力</small><em>轨迹管线 → 执行监督</em></div>
+            </div>
+            <div class="sequence-row">
+              <div class="sequence-message forward span-3-4"><span class="sequence-number">04</span><strong>发起执行</strong><small>完整轨迹、执行策略、超时、取消令牌</small><em>执行监督 → 运行时适配</em></div>
+            </div>
+            <div class="sequence-row realtime-row">
+              <div class="sequence-message forward span-4-5"><span class="sequence-number">05</span><strong>转换并一次性下发</strong><small>适配电控合同；主站完整缓存后按控制周期实时插值</small><em>运行时适配 → 主站 / 孪生</em></div>
+            </div>
+            <div class="sequence-row feedback-row">
+              <div class="sequence-message reverse span-3-5"><span class="sequence-number">06</span><strong>持续回传执行状态</strong><small>期望值、实际值、跟踪误差、缓冲状态与驱动故障</small><em>主站 / 孪生 → 执行监督</em></div>
+            </div>
+            <div class="sequence-row result-row">
+              <div class="sequence-message reverse span-1-3"><span class="sequence-number">07</span><strong>收敛任务结果</strong><small>完成、取消、停止、失败，或触发重新规划</small><em>执行监督 → 任务决策</em></div>
+            </div>
+          </div>
+
+          <div class="sequence-gates" aria-label="执行责任边界">
+            <div><span>运控保证</span><strong>轨迹在下发前已经具备完整时间语义</strong></div>
+            <div><span>实时域保证</span><strong>缓存、周期插值、轴状态与硬件保护</strong></div>
+            <div><span>监督域决定</span><strong>继续、取消、停止、失败或重新规划</strong></div>
+          </div>
+        </div>
+        <figcaption class="diagram-caption">
+          <span><i class="block-key motion"></i>运控计算域</span>
+          <span><i class="block-key supervision"></i>执行监督域</span>
+          <span><i class="block-key realtime"></i>主站实时域</span>
+          <span>01—05 向执行端推进，06—07 沿独立时序行返回。</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">领域合同</span><h2>定时关节轨迹字段</h2><p>领域类型 `TimedJointTrajectory` 比 ROS 消息更严格；ROS 适配器负责与 `trajectory_msgs/JointTrajectory` 转换。</p></div>
+      </div>
+      <div id="trajectory-fields" class="data-table"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">从准备到反馈</span><h2>轨迹从规划到执行的完整流水线</h2><p>规划输出通常还不是可直接执行的合同；轨迹管线把片段变成主站可以确定执行的定时轨迹。</p></div>
+      </div>
+      <div id="trajectory-pipeline" class="pipeline"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">责任划分</span><h2>每一层检查自己掌握的事实</h2><p>多层安全是纵深防护，不是让每一层重复整个系统。主站高频保护与执行监督的高层判断同时保留。</p></div>
+      </div>
+      <div id="execution-responsibilities" class="responsibility-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">运行时协商</span><h2>执行能力合同</h2><p>启动时查询实际主站或孪生的 `ExecutionCapabilities`，再验证轨迹管线产物是否兼容；不能靠文档猜测。</p></div>
+      </div>
+      <div id="execution-capabilities" class="data-table"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">多执行器协同</span><h2>双臂、PP 轴与工具不强行塞进一条轨迹</h2><p>同一控制器内共享时间基；不同控制器通过轨迹束和明确的同步屏障协同。</p></div>
+      </div>
+      <div id="multi-axis-grid" class="multi-axis-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">两类执行语义</span><h2>批量轨迹与未来在线控制分开</h2><p>视觉伺服或力控将来可以增加流式接口，但不能把当前批量执行合同变成含糊的万能入口。</p></div>
+      </div>
+      <div id="execution-modes" class="mode-grid"></div>
+    </section>
+
+    <div class="callout section">
+      <strong>拼接规则：</strong>
+      同一连续运动块内的规划片段由轨迹组合器合并；吸附、释放、场景附着变化、重新获取快照等位置是语义屏障，
+      默认分段执行，不能为了减少 action 次数盲目拼成一条大轨迹。
+    </div>
+
+    <p class="footer-note">这一责任划分已记录在 `DECISIONS.md` 的 D-003；具体主站插值 profile 仍需与电控团队确认并加入 capability probe。</p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

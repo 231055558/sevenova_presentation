@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sevenova ALFA Robot 工程架构与流程演示入口">
+  <title>ALFA Robot · 工程演示</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./" aria-label="返回演示首页">
+        <strong>ALFA Robot</strong>
+        <span>工程演示库</span>
+      </a>
+      <p>Sevenova Hangzhou · 公开技术资料</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div>
+        <span class="eyebrow">架构 · 流程 · 系统边界</span>
+        <h1>工程架构与流程演示</h1>
+        <p>面向架构评审、跨团队对齐和方案分享的静态演示入口。每个主题独立维护，可直接分享对应页面。</p>
+      </div>
+      <aside>
+        <span>当前收录</span>
+        <strong>2 个主题</strong>
+        <small>更新于 2026-07-22</small>
+      </aside>
+    </section>
+
+    <section class="library" aria-labelledby="library-title">
+      <header class="section-heading">
+        <div>
+          <span class="eyebrow">演示目录</span>
+          <h2 id="library-title">选择一个主题</h2>
+        </div>
+        <p>主页面适合概览，主题页面可继续下钻到接口、时序、测试和迁移细节。</p>
+      </header>
+
+      <div class="presentation-list">
+        <article class="presentation featured">
+          <div class="presentation-copy">
+            <div class="meta-row"><span>目标架构</span><time datetime="2026-07-22">2026-07-22</time></div>
+            <h3>运控运行时架构</h3>
+            <p>从启动组合、任务编排和算法能力，一直展开到定时轨迹、真机与数字孪生、测试阶梯及迁移门禁。</p>
+            <ul>
+              <li>7 个分层架构视图</li>
+              <li>中文优先的责任边界</li>
+              <li>桌面与移动端自适应</li>
+            </ul>
+            <a href="motion_runtime_architecture/">打开架构门户 <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="architecture-preview" aria-hidden="true">
+            <div class="preview-label">系统上下文 / L1</div>
+            <div class="preview-flow">
+              <span>任务请求</span><i></i><strong>运控运行时</strong><i></i><span>真机 / 孪生</span>
+            </div>
+            <div class="preview-rail">机器人事实 · 场景 · 标定</div>
+            <div class="preview-rail observer">事件 · 遥测 · 回放</div>
+          </div>
+        </article>
+
+        <article class="presentation">
+          <div class="presentation-copy">
+            <div class="meta-row"><span>V1 最小闭环</span><time datetime="2026-07-22">2026-07-22</time></div>
+            <h3>状态机 × 数据流地图</h3>
+            <p>把卸箱闭环的状态层级、数据对象、异常恢复和 MoveIt 场景一致性放到同一张可交互地图中。</p>
+            <ul>
+              <li>状态与数据一一映射</li>
+              <li>异常恢复矩阵</li>
+              <li>场景一致性链路</li>
+            </ul>
+            <a href="v1_state_data_flow_map/">打开流程地图 <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="flow-preview" aria-hidden="true">
+            <div><span>任务级</span><b>INIT</b><i></i><b>RUNNING</b><i></i><b>FINISH</b></div>
+            <div><span>循环级</span><b>SELECT</b><i></i><b>PLAN</b><i></i><b>EXECUTE</b></div>
+            <div><span>数据</span><b>目标</b><i></i><b>轨迹</b><i></i><b>结果</b></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Sevenova Hangzhou</span>
+    <a href="https://github.com/231055558/sevenova_presentation">GitHub 仓库 <span aria-hidden="true">↗</span></a>
+  </footer>
+</body>
+</html>

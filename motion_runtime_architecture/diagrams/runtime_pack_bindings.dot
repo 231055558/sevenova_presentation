@@ -1,0 +1,125 @@
+digraph RuntimePackBindings {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad=0.24,
+    nodesep=0.30,
+    ranksep=0.55,
+    splines=polyline,
+    compound=true,
+    newrank=true,
+    fontname="Noto Sans CJK SC",
+    fontsize=17,
+    fontcolor="#332017"
+  ];
+  node [
+    shape=rect,
+    style="rounded,filled",
+    fontname="Noto Sans CJK SC",
+    fontsize=10.5,
+    color="#76513b",
+    fontcolor="#332017",
+    fillcolor="#fffaf0",
+    penwidth=1.15,
+    margin="0.13,0.09"
+  ];
+  edge [
+    fontname="Noto Sans CJK SC",
+    fontsize=8.5,
+    color="#76513b",
+    fontcolor="#76513b",
+    penwidth=1.2,
+    arrowsize=0.68
+  ];
+
+  engine [label="MotionEngine + ExecutionSupervisor\n只调用稳定 Runtime Interface", fillcolor="#4b2f22", fontcolor="#fff8ed"];
+  runtime_graph [label="RuntimeGraph\nruntime.default → selected pack", fillcolor="#ddc7aa"];
+  contract [
+    shape=plain,
+    label=<
+      <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" COLOR="#76513b" BGCOLOR="#fffaf0">
+        <TR><TD COLSPAN="5" BGCOLOR="#eadbc6"><B>Runtime Seam · 同一领域合同</B></TD></TR>
+        <TR>
+          <TD>ExecutionPort</TD>
+          <TD>RobotStateProvider</TD>
+          <TD>HealthProbe</TD>
+          <TD>Clock</TD>
+          <TD>TelemetrySource</TD>
+        </TR>
+        <TR>
+          <TD COLSPAN="5"><FONT POINT-SIZE="9">相同 Command / Result / Error / cancel / time semantics</FONT></TD>
+        </TR>
+      </TABLE>
+    >
+  ];
+
+  engine -> contract [label="call"];
+  runtime_graph -> contract [label="bind once"];
+  { rank=same; engine; runtime_graph; }
+
+  subgraph cluster_real {
+    label="RealRobotRuntimePack";
+    labelloc=t;
+    labeljust=l;
+    color="#687157";
+    fillcolor="#ece7d8";
+    style="rounded,filled";
+
+    real_adapter [label="Hardware Adapter"];
+    master [label="EtherCAT 主站\nbuffer + realtime interpolation", fillcolor="#687157", fontcolor="#fffaf0"];
+    drive [label="Encoder / Drive / Tool IO"];
+    real_adapter -> master -> drive;
+  }
+
+  subgraph cluster_twin {
+    label="DigitalTwinRuntimePack";
+    labelloc=t;
+    labeljust=l;
+    color="#76513b";
+    fillcolor="#f4e8d7";
+    style="rounded,filled";
+
+    twin_adapter [label="Twin Adapter"];
+    twin_world [label="TwinWorld\n同合同插值 + 状态推进", fillcolor="#ddc7aa"];
+    fault [label="SimClock + FaultInjector"];
+    twin_adapter -> twin_world -> fault;
+  }
+
+  subgraph cluster_fake {
+    label="FakeRuntimePack";
+    labelloc=t;
+    labeljust=l;
+    color="#9b6548";
+    fillcolor="#efe1cf";
+    style="rounded,filled";
+
+    fake_adapter [label="Deterministic Fake"];
+    script [label="Scripted Result\nmanual clock + call capture"];
+    fake_adapter -> script;
+  }
+
+  subgraph cluster_replay {
+    label="ReplayRuntimePack";
+    labelloc=t;
+    labeljust=l;
+    color="#ad784c";
+    fillcolor="#f5ead8";
+    style="rounded,filled";
+
+    replay_adapter [label="Replay Adapter"];
+    trace [label="Recorded state / result / timing\nread-only reproduction"];
+    replay_adapter -> trace;
+  }
+
+  real_adapter -> contract [label="implements", arrowhead=empty];
+  twin_adapter -> contract [label="implements", arrowhead=empty];
+  fake_adapter -> contract [label="implements", arrowhead=empty];
+  replay_adapter -> contract [label="implements", arrowhead=empty];
+
+  observer [label="Observer Pack\nRerun / RViz / JSONL", shape=note, fillcolor="#fffaf0"];
+  drive -> observer [label="Telemetry", color="#687157", fontcolor="#687157", style=dashed];
+  twin_world -> observer [label="same Telemetry", color="#687157", fontcolor="#687157", style=dashed];
+  observer -> twin_world [label="no control authority", color="#8a4037", fontcolor="#8a4037", arrowhead=tee, style=dashed, constraint=false];
+
+  { rank=same; real_adapter; twin_adapter; fake_adapter; replay_adapter; }
+}

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>启动与任务流 · robot_motion_control</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="flows">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><h1 id="site-title"></h1><p id="site-meta"></p></div>
+      <nav id="site-nav" class="site-nav" aria-label="架构页面导航"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-copy">
+        <span class="kicker">生命周期 · 任务邮箱 · 快照 · 并发</span>
+        <h2>启动是构建系统，任务是使用系统。</h2>
+        <p>所有注册、流程编译、依赖绑定和健康检查必须发生在入口开放之前。任务内状态串行，耗时操作才并发。</p>
+      </div>
+      <aside class="hero-aside">
+        <strong>核心不变量</strong>
+        <p>未就绪不接任务；运行中不查注册表切换算法；同一任务只有任务邮箱消费者能修改状态。</p>
+      </aside>
+    </section>
+
+    <section class="section structure-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">D0 · 双生命周期</span>
+          <h2>启动负责构建，任务负责使用</h2>
+          <p>左侧生命周期每进程只发生一次；通过 READY 门后，右侧生命周期才可为每个请求独立运行。</p>
+        </div>
+        <span class="diagram-scope">唯一交接物：冻结的运行时依赖图</span>
+      </div>
+      <figure class="architecture-figure">
+        <div class="diagram-layout lifecycle-layout">
+          <div class="lifecycle-board" role="img" aria-label="应用启动完成注册编译绑定与验证，通过 READY 门后，单次任务固定事实、决策调度、回收结果并收口">
+            <section class="lifecycle-lane startup-lane">
+              <header><span>每个进程一次</span><h3>应用启动</h3><p>把配置和实现组合成可运行系统</p></header>
+              <ol>
+                <li><span>01</span><div><strong>选择运行组合</strong><small>机器人配置、任务包、算法包、运行环境</small></div></li>
+                <li><span>02</span><div><strong>注册并冻结</strong><small>类型化工厂完成去重、版本与能力检查</small></div></li>
+                <li><span>03</span><div><strong>编译与绑定</strong><small>流程配置变成不可变流程，角色绑定具体实例</small></div></li>
+                <li><span>04</span><div><strong>验证并预热</strong><small>合同、资源、健康、状态新鲜度全部通过</small></div></li>
+              </ol>
+              <div class="failure-exit"><strong>任一步失败</strong><span>入口保持关闭，输出结构化启动错误</span></div>
+            </section>
+
+            <div class="ready-handoff" aria-label="READY 门">
+              <span>唯一交接门</span>
+              <strong>READY</strong>
+              <small>冻结运行时依赖图<br>最后开放任务入口</small>
+              <i aria-hidden="true"></i>
+            </div>
+
+            <section class="lifecycle-lane job-lane">
+              <header><span>每个请求一次</span><h3>单次任务</h3><p>只使用已经冻结的系统能力</p></header>
+              <ol>
+                <li><span>01</span><div><strong>准入并建立任务</strong><small>检查幂等、期限和资源，创建任务邮箱</small></div></li>
+                <li><span>02</span><div><strong>固定阶段事实</strong><small>获取机器人、场景、工具和标定快照</small></div></li>
+                <li><span>03</span><div><strong>决策与有界调度</strong><small>状态串行变化，耗时操作按预算并发</small></div></li>
+                <li><span>04</span><div><strong>结果回到任务邮箱</strong><small>成功、失败和取消都沿可靠入口回流</small></div></li>
+                <li><span>05</span><div><strong>形成可审计终态</strong><small>确认最终状态、释放资源、保存事件链</small></div></li>
+              </ol>
+            </section>
+          </div>
+
+          <aside class="lifecycle-observer">
+            <span>旁路观察</span>
+            <strong>事件与遥测可以持续扇出，但不能绕过任务邮箱修改状态。</strong>
+            <p>结构化日志 · 指标 · Rerun / RViz · 回放记录</p>
+          </aside>
+        </div>
+        <figcaption class="diagram-caption">
+          <span><i class="block-key core"></i>启动组合责任</span>
+          <span><i class="block-key module"></i>单次任务责任</span>
+          <span><i class="block-key supervision"></i>READY 是唯一开放入口的门</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">应用状态</span><h2>应用生命周期</h2><p>任何构建或验证失败都进入 STARTUP_FAILED，并保持所有任务入口关闭。</p></div>
+      </div>
+      <div id="lifecycle-states" class="lifecycle-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">启动时序</span><h2>完整启动流程</h2><p>注册表在构图前开放，构图后冻结；运行时包和任务包都在同一启动模型里安装。</p></div>
+      </div>
+      <div id="startup-timeline" class="timeline"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">任务时序</span><h2>单次任务流程</h2><p>操作结果必须回到任务邮箱；事件中心只广播事实，不承担控制结果的可靠回传。</p></div>
+      </div>
+      <div id="job-timeline" class="timeline"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">内部通信</span><h2>五类内部通信</h2><p>把控制、结果、观察、高频状态和一致读取分开，避免形成一个什么都传的总线。</p></div>
+      </div>
+      <div id="communication-grid" class="communication-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">并发模型</span><h2>状态串行，操作有界并发</h2><p>一个注册项不对应一个线程；并行度来自实际活跃操作，并受资源和线程安全声明约束。</p></div>
+      </div>
+      <div id="concurrency-rules" class="pair-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><span class="kicker">快照模型</span><h2>快照不是一次取完永远使用</h2><p>启动事实、每次规划事实、执行前置条件和执行观测拥有不同生命周期。</p></div>
+      </div>
+      <div id="snapshot-grid" class="snapshot-grid"></div>
+    </section>
+
+    <p class="footer-note">本页描述运行时控制流；具体模块的错误和测试面见 `modules.html`。</p>
+  </main>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
