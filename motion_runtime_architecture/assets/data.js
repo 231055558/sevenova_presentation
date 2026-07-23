@@ -1,16 +1,16 @@
 window.MOTION_ARCH_DATA = {
   meta: {
     title: "robot_motion_control 目标运行时架构",
-    version: "v0",
-    updated: "2026-07-22",
-    status: "设计基线",
-    note: "描述目标架构，不表示当前代码已经完成。算法细节不在此冻结。"
+    version: "v1",
+    updated: "2026-07-23",
+    status: "对象系统设计基线",
+    note: "描述统一程序与对象图目标，不表示当前代码已经完成。算法细节不在此冻结。"
   },
 
   nav: [
     ["index.html", "整体架构", "overview"],
     ["flows.html", "启动与任务流", "flows"],
-    ["modules.html", "局部模块", "modules"],
+    ["modules.html", "对象与接口", "modules"],
     ["execution.html", "轨迹与执行", "execution"],
     ["runtime.html", "真机与孪生", "runtime"],
     ["testing.html", "测试与模拟", "testing"],
@@ -19,23 +19,23 @@ window.MOTION_ARCH_DATA = {
 
   principles: [
     {
-      title: "功能核心不依赖 ROS",
-      text: "Workflow、MotionJob、MotionEngine、错误策略和领域类型可以在单进程中直接测试；ROS 只存在于 Adapter 外壳。",
+      title: "一个系统，一套领域对象",
+      text: "MotionSystem 是统一门面；RobotDefinition、算法、运行环境和通信都是对象，不再被目标 ROS 包结构切碎。",
       tag: "testable"
     },
     {
-      title: "注册不等于绑定",
-      text: "RegistryHub 保存可用工厂；RuntimeGraph 在启动时为每个任务角色选择并注入具体实现，运行中不再猜类型。",
+      title: "发现不等于绑定",
+      text: "ObjectCatalog 发现可用工厂；SystemBuilder 在启动时注入依赖并冻结 ObjectGraph，任务运行中不猜类型。",
       tag: "typed"
     },
     {
-      title: "事实通过 Snapshot 固定",
-      text: "机器人模型、关节状态、场景、工具和标定均带版本；规划基于不可变快照，执行前重新校验实时前置条件。",
+      title: "两个图解决两类变化",
+      text: "ObjectGraph 固定本次启动使用谁；TaskGraph 描述一种任务怎么走；JobContext 只保存单次请求事实。",
       tag: "coherent"
     },
     {
-      title: "Job 状态串行",
-      text: "每个 MotionJob 通过 mailbox 串行改变状态；耗时 Operation 使用固定 worker pool 或异步 Adapter 有界并发。",
+      title: "准确接口与有界并发",
+      text: "IK、规划、轨迹、通信各用自己的家族接口；注册对象不创建线程，活跃 Operation 才共享有界执行资源。",
       tag: "concurrent"
     },
     {
@@ -44,8 +44,8 @@ window.MOTION_ARCH_DATA = {
       tag: "realtime"
     },
     {
-      title: "真机与孪生同族替换",
-      text: "RealRobotRuntimePack、DigitalTwinRuntimePack 和 FakeRuntimePack 满足相同 Interface，任务流程不出现 simulation 分支。",
+      title: "外部框架只是实现",
+      text: "Direct/ROS2 是 Communication 实现，MoveIt 是算法实现依赖，真机/孪生/Fake 是 RobotRuntime 实现。",
       tag: "replaceable"
     }
   ],
@@ -53,66 +53,66 @@ window.MOTION_ARCH_DATA = {
   layers: [
     {
       id: "evidence",
-      name: "入口与事实证据",
+      name: "系统门面与领域值",
       tone: "cyan",
-      purpose: "把外部请求和持续变化的世界证据转换为稳定领域类型。",
+      purpose: "对外只暴露一个运控系统，对内先建立与框架无关的领域语言。",
       items: [
-        ["TaskIngressAdapter", "ROS Action / CLI / IPC 请求转为 MotionTaskRequest"],
-        ["RobotStateSource", "真机或孪生关节状态、控制器状态"],
-        ["SceneSource", "障碍、箱体、附着物和场景版本"],
-        ["RobotProfileLoader", "URDF/SRDF、限位、标定、工具和执行合同"]
+        ["MotionSystem", "from_config / start / submit / stop 的唯一公共门面"],
+        ["RobotDefinition", "运动学、关节、限位、碰撞、工具与执行合同"],
+        ["Motion Value Objects", "请求、状态、场景、轨迹、快照、错误和结果"],
+        ["ResourceResolver", "解析 asset:// 资源，不向领域泄漏工作空间路径"]
       ]
     },
     {
       id: "composition",
       name: "启动组合",
       tone: "blue",
-      purpose: "任务入口开放前完成注册、编译、绑定、兼容性检查和预热。",
+      purpose: "任务入口开放前发现工厂、创建对象、注入依赖、校验并冻结应用对象图。",
       items: [
-        ["MotionApplication", "生命周期根与 composition root"],
-        ["RuntimeManifest", "选择 robot profile、Task Pack、Adapter 和观察者"],
-        ["RegistryHub", "按能力家族保存类型安全工厂"],
-        ["WorkflowCompiler", "YAML → 不可变 CompiledWorkflow"],
-        ["RuntimeGraph", "任务角色到具体实例的冻结绑定图"]
+        ["SystemConfig", "选择 RobotDefinition、对象实现、绑定、通信和预算"],
+        ["ObjectCatalog", "按准确家族保存类型安全工厂"],
+        ["SystemBuilder", "构造对象、注入依赖、执行兼容性与环检查"],
+        ["ObjectGraph", "本次启动对象实例与 typed handle 的冻结图"],
+        ["TaskDefinitionCatalog", "任务 schema、TaskGraph 来源和资源声明"]
       ]
     },
     {
       id: "orchestration",
       name: "任务运行核心",
       tone: "violet",
-      purpose: "管理 MotionJob、状态流转、快照、资源和 Operation，而不直接调用外部框架。",
+      purpose: "解释已编译 TaskGraph，管理 JobContext、快照、资源和 Operation，不直接调用外部框架。",
       items: [
         ["JobManager", "准入、幂等、查询、取消和结果"],
-        ["MotionEngine", "state + event → new state + commands"],
+        ["MotionEngine", "TaskGraph + state + result → new state + commands"],
+        ["JobContext", "冻结图引用、快照、租约、取消、deadline 和关联信息"],
         ["SnapshotManager", "版本化事实的一致快照"],
-        ["ResourceScheduler", "机器人、轴组和工具资源租约"],
-        ["OperationScheduler", "有界 worker、超时和协作取消"]
+        ["OperationScheduler", "资源租约、有界 worker、超时和协作取消"]
       ]
     },
     {
       id: "capability",
-      name: "能力家族",
+      name: "运动对象家族",
       tone: "amber",
-      purpose: "用小而准确的 Interface 表达会真正变化的算法与动作能力。",
+      purpose: "共同继承 MotionObject 元协议，调用时只使用输入、不变量和错误一致的准确家族接口。",
       items: [
-        ["IK Family", "IIKSolver / IIKCandidateGenerator / 约束能力"],
-        ["Planning Family", "IExtractPlanner / ILoadedPlanner / 通用规划"],
-        ["Trajectory Family", "拼接、平滑、时间参数化、验证"],
-        ["Primitive Family", "Attach、Release、Approach 等原子行为"],
-        ["Policy Family", "重试、恢复、超时和候选选择"]
+        ["IKSolver", "解析、多种子、约束 IK 和确定性 Fake"],
+        ["MotionPlanner", "抽离、负重、通用规划及其显式 IK 依赖"],
+        ["TrajectoryProcessor", "拼接、平滑、时间参数化与验证"],
+        ["TaskNode / Guard", "计算、动作、检查、分支和 join 节点"],
+        ["Policy", "候选选择、重试、恢复、超时和资源策略"]
       ]
     },
     {
       id: "runtime",
-      name: "运行时与 Adapter",
+      name: "运行环境与通信对象",
       tone: "green",
-      purpose: "把领域 Command 翻译给 MoveIt、数字孪生、ROS 或真机主站，并把结果翻回领域事件。",
+      purpose: "把领域 Command 交给外部环境，并允许同一核心在直接调用、ROS、回放和测试边界间切换。",
       items: [
-        ["Planning Adapter", "MoveIt / 自研 / Fake"],
-        ["Execution Adapter", "真机 buffered trajectory / twin / fake"],
-        ["State & Scene Adapter", "ROS topic、进程内 store 或 replay"],
-        ["ToolIO Adapter", "真空、电磁阀和工具状态"],
-        ["RuntimeHealth", "能力、时钟、控制器和依赖健康"]
+        ["RobotRuntime", "真机 buffered trajectory / twin / fake / replay"],
+        ["Communication", "Direct / ROS2 / Replay / Test 的类型化通道"],
+        ["StateSource", "机器人、场景、工具的版本化事实流"],
+        ["ToolRuntime", "真空、电磁阀与工具动作/状态"],
+        ["RuntimeHealth", "能力、时钟、控制器和外部依赖健康"]
       ]
     },
     {
@@ -123,23 +123,24 @@ window.MOTION_ARCH_DATA = {
       items: [
         ["EventHub", "领域事件扇出与审计"],
         ["TelemetryStream", "高频关节、控制误差和仿真状态"],
-        ["Observer", "JSONL、Rerun、RViz、metrics、ROS feedback"],
+        ["Observer", "JSONL、Rerun、RViz、metrics 和边界 feedback"],
+        ["LifecycleListener", "只观察对象 start/stop/health"],
         ["FaultInjector", "测试环境故障与时序注入"],
-        ["Replay", "按事件、快照和配置复现实验"]
+        ["Replay", "按配置、对象图、快照和结果复现实验"]
       ]
     }
   ],
 
   overallFlow: [
-    ["1", "启动选择", "RuntimeManifest 选择 robot profile、Task Pack、算法实例、Runtime Pack 和 Observer。"],
-    ["2", "注册冻结", "各 Pack 安装类型安全工厂；RegistryHub 完成重复 ID、类型和版本检查后冻结。"],
-    ["3", "Workflow 编译", "声明式 YAML 经 schema、语义、资源和可达分支检查，生成 CompiledWorkflow。"],
-    ["4", "绑定构图", "RuntimeGraphBuilder 为 extract_ik、loaded_planner、execution 等命名角色注入实例。"],
-    ["5", "READY", "完成兼容性、健康、执行合同和预热检查后才开放任务入口。"],
+    ["1", "读取系统配置", "SystemConfig 选择机器人定义源、对象实现、显式依赖绑定、通信环境和并发预算。"],
+    ["2", "发现对象工厂", "ObjectCatalog 按家族安装类型安全工厂；注册只说明系统能创建什么。"],
+    ["3", "构建对象图", "SystemBuilder 创建实例并注入依赖，例如两个 planner 分别绑定两个 IK 对象。"],
+    ["4", "编译任务图", "声明式任务配置经 schema、类型、资源、分支和退出条件检查，生成 TaskGraph。"],
+    ["5", "验证并启动", "冻结 ObjectGraph，按拓扑顺序启动 ActiveObject；健康、合同和预热通过后进入 READY。"],
     ["6", "任务准入", "JobManager 校验请求、幂等键、系统状态和资源，创建 MotionJob。"],
-    ["7", "固定事实", "SnapshotManager 捕获机器人、场景、工具、标定和配置版本。"],
-    ["8", "状态决策", "MotionEngine 根据 JobState 与输入 Event 产生一个或多个领域 Command。"],
-    ["9", "执行 Operation", "OperationScheduler 将 Command 交给已绑定 Adapter；算法和 I/O 可并发运行。"],
+    ["7", "建立 JobContext", "固定 ObjectGraph/TaskGraph 版本，并捕获机器人、场景、工具和标定快照。"],
+    ["8", "解释任务图", "MotionEngine 根据 JobState 与 Result 推进 TaskGraph，产生一个或多个领域 Command。"],
+    ["9", "调用对象", "Invoker 统一关联、计时和错误归一化；Scheduler 让算法与 I/O 在预算内并发。"],
     ["10", "结果回流", "Result 进入 Job mailbox；EventHub 向 Observer 广播已发生事实。"],
     ["11", "轨迹执行", "ExecutionSupervisor 验证、提交完整定时轨迹并监督真机或孪生。"],
     ["12", "收口", "确认最终状态、持久化结果、释放资源；成功、失败和取消都形成可审计终态。"]
@@ -147,31 +148,37 @@ window.MOTION_ARCH_DATA = {
 
   keyConcepts: [
     {
-      name: "TaskPack",
-      question: "一种任务需要什么？",
-      answer: "声明请求/结果类型、Workflow、Primitive、能力角色、策略、资源和支持的机器人配置。",
+      name: "MotionSystem",
+      question: "调用者如何使用整个运控？",
+      answer: "只通过构建、启动、submit、查询/取消和停止门面；内部对象和通信实现不泄漏给业务调用者。",
+      lifetime: "程序级"
+    },
+    {
+      name: "ObjectGraph",
+      question: "这次启动实际用了谁？",
+      answer: "记录对象实例与 typed dependency：机器人定义、算法、运行环境、通信和观察对象在 READY 前固定。",
+      lifetime: "启动级"
+    },
+    {
+      name: "TaskGraph",
+      question: "一种任务怎样运行？",
+      answer: "把配置编译为类型化节点、分支、重试和 join；节点只引用 ObjectGraph 中已绑定的命名角色。",
       lifetime: "任务类型级"
     },
     {
-      name: "RuntimeGraph",
-      question: "这次启动实际用了谁？",
-      answer: "记录每个命名角色到具体 Adapter/Implementation 实例的依赖图，启动后冻结并随 Job 记录版本。",
-      lifetime: "应用级"
-    },
-    {
-      name: "MotionJob",
+      name: "JobContext",
       question: "这一次任务正在做什么？",
-      answer: "保存请求、当前状态、快照引用、资源租约、Operation、取消令牌、事件链和最终结果。",
+      answer: "保存请求、图版本、快照引用、资源租约、Operation、取消令牌、deadline、事件链和最终结果。",
       lifetime: "单次请求"
     }
   ],
 
   lifecycleStates: [
     ["CREATED", "进程对象已创建，尚未接受注册。", "next"],
-    ["REGISTERING", "Core、Task、Runtime、Observer Pack 安装工厂。", "next"],
-    ["BUILDING", "编译 Workflow、实例化 Adapter、构建 RuntimeGraph。", "next"],
-    ["VALIDATING", "检查类型、语义、机器人兼容性、资源和执行能力。", "next"],
-    ["WARMING_UP", "加载模型、插件、缓存，做无运动健康检查。", "next"],
+    ["DISCOVERING", "按对象家族安装类型安全工厂和 TaskDefinition。", "next"],
+    ["BUILDING", "创建对象、注入 typed dependency、构建 ObjectGraph 和 TaskGraph。", "next"],
+    ["VALIDATING", "检查依赖环、能力、机器人兼容性、资源和执行合同。", "next"],
+    ["STARTING", "按拓扑顺序启动 ActiveObject，加载资源并完成无运动预热。", "next"],
     ["READY", "入口开放，可接收任务。", "ready"],
     ["RUNNING", "存在活跃 Job；应用仍可接收符合资源策略的请求。", "active"],
     ["DRAINING", "停止接受新 Job，等待或取消现有 Job。", "stop"],
@@ -180,33 +187,33 @@ window.MOTION_ARCH_DATA = {
   ],
 
   startupSteps: [
-    ["01", "读取 RuntimeManifest", "只解析启动选择，不实例化运行中 Job。", "RuntimeManifest"],
-    ["02", "加载 RobotProfile", "确定模型、关节语义、工具、标定、限制和执行轴合同。", "RobotProfile"],
-    ["03", "安装 Core Pack", "注册错误码、时钟、序列化、默认策略等基础工厂。", "RegistryHub OPEN"],
-    ["04", "安装 Capability Pack", "注册 IK、规划、轨迹和 Primitive 家族工厂。", "Typed factories"],
-    ["05", "安装 Runtime Pack", "真机、数字孪生、Fake 或 Replay 注册执行/状态/健康 Adapter。", "Runtime providers"],
-    ["06", "安装 Task Pack", "注册任务 schema、Workflow、所需角色、策略和资源声明。", "TaskCatalog source"],
-    ["07", "安装 Observer Pack", "注册 JSONL、Rerun、metrics、控制台和 ROS feedback sink。", "Event sinks"],
-    ["08", "冻结 RegistryHub", "拒绝重复 ID 和启动后的隐式变更。", "RegistryHub FROZEN"],
-    ["09", "编译并绑定", "WorkflowCompiler + RuntimeGraphBuilder 生成不可变定义和实例依赖图。", "CompiledWorkflow + RuntimeGraph"],
-    ["10", "验证与预热", "兼容性、线程安全、主站执行能力、状态新鲜度、模型加载和无运动探测。", "ReadinessReport"],
-    ["11", "构建运行核心", "启动 JobManager、Engine、Scheduler、SnapshotManager、Supervisor 和 EventHub。", "Runtime ready"],
-    ["12", "开放 Ingress", "最后启动 ROS/CLI/IPC Adapter；此前任何任务请求都被拒绝。", "READY"]
+    ["01", "读取 SystemConfig", "解析对象选择、绑定、任务、通信和预算；不创建 Job。", "Typed SystemConfig"],
+    ["02", "解析机器人资源", "RobotDefinitionSource + ResourceResolver 构建运动学、关节、限制、碰撞、工具与执行合同。", "RobotDefinition"],
+    ["03", "安装对象工厂", "按 IKSolver、Planner、Trajectory、Runtime、Communication、Observer 家族登记。", "ObjectCatalog OPEN"],
+    ["04", "安装任务定义", "登记请求/结果 schema、TaskGraph 来源、命名角色、策略和资源声明。", "TaskDefinitionCatalog"],
+    ["05", "创建对象实例", "SystemBuilder 按配置创建普通对象和 ActiveObject，但暂不开放外部入口。", "Object instances"],
+    ["06", "注入对象依赖", "为 planner 注入指定 IK，为 runtime 注入定义/时钟，为通信注入系统门面。", "Mutable ObjectGraph"],
+    ["07", "编译 TaskGraph", "校验节点类型、分支、循环预算、join、角色和资源。", "Compiled TaskGraph"],
+    ["08", "冻结 ObjectGraph", "完成重复 ID、依赖环、家族类型和组合能力检查，拒绝运行期隐式换绑。", "Frozen ObjectGraph"],
+    ["09", "启动 ActiveObject", "按依赖拓扑启动通信之外的 runtime、state source、telemetry 和 observer。", "Started objects"],
+    ["10", "验证与预热", "检查线程安全、执行能力、状态新鲜度、模型加载、健康和无运动探测。", "ReadinessReport"],
+    ["11", "启动任务核心", "JobManager、Engine、Scheduler、SnapshotManager、Supervisor 与 EventHub 就绪。", "MotionSystem ready"],
+    ["12", "开放 Communication", "最后开放 Direct/ROS2/IPC 任务入口；此前任何请求均返回 NOT_READY。", "READY"]
   ],
 
   jobSteps: [
-    ["01", "请求进入", "Ingress Adapter 转换为领域 MotionTaskRequest，保留 request_id 和 deadline。", "command"],
+    ["01", "请求进入", "Communication 把 Direct/ROS2/IPC 输入转换为领域 TaskRequest，保留 request_id 和 deadline。", "command"],
     ["02", "准入", "JobManager 检查 READY、schema、幂等、资源和任务类型。", "decision"],
-    ["03", "创建 Job", "固定 RuntimeGraph/Workflow/RobotProfile 版本并创建 mailbox、journal、cancel token。", "state"],
+    ["03", "创建 JobContext", "固定 ObjectGraph/TaskGraph/RobotDefinition 版本并创建 mailbox、journal、cancel token。", "state"],
     ["04", "捕获快照", "按阶段获取一致 RobotState、Scene、Tool、Calibration 快照。", "snapshot"],
-    ["05", "Engine 决策", "MotionEngine 纯计算下一状态和 Command，不直接调用 ROS/MoveIt。", "decision"],
-    ["06", "调度 Operation", "Scheduler 根据资源、并发预算和线程安全声明执行一个或多个 Command。", "parallel"],
-    ["07", "Adapter 工作", "已绑定 Adapter 调用算法、主站、数字孪生或 Fake，返回 Result。", "adapter"],
+    ["05", "推进 TaskGraph", "MotionEngine 纯计算下一状态和 Command，不直接调用 ROS/MoveIt。", "decision"],
+    ["06", "调度 Operation", "Scheduler 根据资源、并发预算和对象线程安全声明执行一个或多个 Command。", "parallel"],
+    ["07", "Invoker 调用对象", "统一添加关联、计时、deadline、取消和异常归一化；对象返回 typed Result。", "object"],
     ["08", "回到 mailbox", "Result 按 Job 内顺序处理；迟到、重复和已取消结果有明确规则。", "result"],
     ["09", "监督执行", "轨迹由 ExecutionSupervisor 提交并监控，反馈作为 Result/Event 回流。", "feedback"],
     ["10", "结束或恢复", "Engine 根据事实和 RecoveryPolicy 完成、重试、重规划或安全终止。", "decision"],
     ["11", "最终确认", "确认最终机器人/工具状态，写入 JobResult 和完整事件链。", "state"],
-    ["12", "释放", "释放资源租约、Operation 和 Job 数据；保留可查询摘要与审计记录。", "result"]
+    ["12", "释放", "释放资源租约、Operation 和 JobContext；保留可查询摘要与审计记录。", "result"]
   ],
 
   communicationTypes: [
@@ -245,9 +252,9 @@ window.MOTION_ARCH_DATA = {
   concurrencyRules: [
     ["Job mailbox", "逻辑串行队列，不等于一个 OS 线程；同一 Job 的状态变更按序处理。"],
     ["Operation worker pool", "固定大小、有界队列；CPU 算法共享 worker，不为每个注册项创建线程。"],
-    ["Adapter async I/O", "ROS Action、真机反馈和定时器通过回调返回 Result，不阻塞 Engine。"],
+    ["ActiveObject async I/O", "ROS2、真机反馈和定时器通过 completion 返回 Result，不阻塞 Engine。"],
     ["并行 join", "Engine 可发出左右臂或候选并行 Command，并以 operation group + join policy 收口。"],
-    ["线程安全声明", "Implementation 声明 thread_safe、internal_parallelism、max_concurrency 和所需上下文。"],
+    ["线程安全声明", "MotionObject 声明 thread_safe、internal_parallelism、max_concurrency 和所需上下文。"],
     ["资源租约", "ResourceScheduler 防止多个 Job 同时控制相同机器人、轴组、工具或场景写权限。"],
     ["协作取消", "取消令牌传播给尚未开始和正在运行的 Operation；结果迟到时不得复活已终止 Job。"],
     ["不可变快照", "并行规划共享只读 Snapshot；存在内部缓存的 MoveIt/FCL 上下文应按 worker 隔离。"]
@@ -257,8 +264,8 @@ window.MOTION_ARCH_DATA = {
     {
       name: "启动固定事实",
       lifetime: "Application / Job",
-      data: "RobotProfile、RuntimeGraph、CompiledWorkflow、执行能力合同",
-      invalidation: "运行期间不热改；版本变化需要新 RuntimeGraph 或重启"
+      data: "RobotDefinition、ObjectGraph、TaskGraph、执行能力合同",
+      invalidation: "运行期间不热改；版本变化需要新 ObjectGraph 或重启"
     },
     {
       name: "规划快照",
@@ -283,24 +290,24 @@ window.MOTION_ARCH_DATA = {
   modules: [
     {
       id: "motion-application",
-      name: "MotionApplication",
+      name: "MotionSystem",
       group: "startup",
       lifetime: "Application",
-      purpose: "整个进程的 composition root 和生命周期根，只组织 Module，不承载任务业务。",
-      inputs: ["RuntimeManifest", "进程停止/重载请求"],
-      outputs: ["READY/FAILED 状态", "JobManager ingress", "ReadinessReport"],
-      owns: ["RegistryHub", "RuntimeGraph", "运行核心 Module 的生命周期"],
+      purpose: "统一运控门面、composition root 和生命周期根；对外只暴露构建、启动、提交、查询/取消与停止。",
+      inputs: ["SystemConfig", "TaskRequest", "停止请求"],
+      outputs: ["READY/FAILED 状态", "JobHandle / JobResult", "ReadinessReport"],
+      owns: ["ObjectGraph", "任务核心", "ActiveObject 的拓扑生命周期"],
       invariants: ["Ingress 最后开放", "任一关键启动失败都 fail closed", "停止顺序与启动顺序相反"],
-      errors: ["MANIFEST_INVALID", "STARTUP_DEPENDENCY_FAILED", "WARMUP_FAILED"],
-      stack: "C++17；纯 composition 层；ROS main 位于外部 Adapter executable",
-      tests: "使用全部 Fake Pack 验证生命周期、启动失败和安全关闭"
+      errors: ["CONFIG_INVALID", "STARTUP_DEPENDENCY_FAILED", "WARMUP_FAILED"],
+      stack: "C++20 候选；纯 composition 层；ROS main 只是可选 integration executable",
+      tests: "DirectCommunication + 全 Fake 对象验证生命周期、任务门面、启动失败和安全关闭"
     },
     {
       id: "runtime-manifest",
-      name: "RuntimeManifest",
+      name: "SystemConfig",
       group: "startup",
       lifetime: "Application",
-      purpose: "描述这次启动选择哪些机器人、任务、能力实例、Runtime Pack、Observer 和并发预算。",
+      purpose: "描述本次启动选择的机器人定义源、对象实例、显式依赖绑定、任务定义、通信和并发预算。",
       inputs: ["版本化 YAML", "受控命令行覆盖"],
       outputs: ["类型化启动模型"],
       owns: ["选择，不拥有实例", "配置 provenance 与版本"],
@@ -311,59 +318,87 @@ window.MOTION_ARCH_DATA = {
     },
     {
       id: "task-pack",
-      name: "TaskPack",
+      name: "TaskDefinition",
       group: "startup",
       lifetime: "Task type",
-      purpose: "一种任务类型的安装入口，声明 Workflow、能力角色、Primitive、策略、资源和请求结果类型。",
-      inputs: ["TaskPackBuilder", "Task 配置"],
-      outputs: ["Workflow source", "DependencySpec", "Task schema"],
+      purpose: "一种任务类型的静态定义，声明 TaskGraph、命名对象角色、策略、资源和请求/结果类型。",
+      inputs: ["TaskDefinitionBuilder", "Task YAML"],
+      outputs: ["TaskGraph source", "RoleSpec", "Task schema"],
       owns: ["任务语义", "不拥有算法实例或 Job 状态"],
-      invariants: ["任务角色使用命名依赖", "不可在 install 时启动线程", "不可调用硬件"],
-      errors: ["TASK_SCHEMA_INVALID", "MISSING_ROLE", "UNSUPPORTED_ROBOT_PROFILE"],
-      stack: "C++17 安装入口 + 声明式 Workflow YAML",
-      tests: "编译 Workflow、缺依赖、资源冲突和分支完整性"
+      invariants: ["任务角色引用 ObjectGraph 命名对象", "定义期不启动线程", "配置节点不可直接调用硬件"],
+      errors: ["TASK_SCHEMA_INVALID", "MISSING_ROLE", "UNSUPPORTED_ROBOT_DEFINITION"],
+      stack: "C++20 类型注册入口 + 声明式 TaskGraph YAML",
+      tests: "编译 TaskGraph、缺角色、资源冲突和分支完整性"
     },
     {
       id: "registry-hub",
-      name: "RegistryHub",
+      name: "ObjectCatalog",
       group: "startup",
       lifetime: "Application",
-      purpose: "按能力家族保存类型安全工厂，支持 OPEN → FROZEN 两阶段。",
-      inputs: ["Pack install", "ModuleDescriptor", "Factory"],
+      purpose: "按对象家族保存类型安全工厂，只负责实现发现，不保存本次启动的依赖绑定。",
+      inputs: ["ObjectDescriptor", "Typed Factory"],
       outputs: ["按 Interface 类型查询的 factory handle"],
       owns: ["ID 唯一性", "实现元数据", "工厂生命周期"],
-      invariants: ["不提供巨大 Registry<ISkill>", "冻结后不可隐式写入", "运行时不做 dynamic_cast 猜类型"],
-      errors: ["DUPLICATE_ID", "REGISTRY_FROZEN", "WRONG_FAMILY"],
-      stack: "C++ 模板 TypedRegistry<T>；type-safe handle",
+      invariants: ["不提供 Registry<ISkill>", "系统构建完成后不可写", "任务运行时不查目录或 dynamic_cast"],
+      errors: ["DUPLICATE_ID", "CATALOG_FROZEN", "WRONG_FAMILY"],
+      stack: "C++ 模板 ObjectCatalog::add<T>/create<T>；concept/trait 约束候选",
       tests: "重复 ID、错误 family、冻结、工厂异常和 descriptor 校验"
+    },
+    {
+      id: "system-builder",
+      name: "SystemBuilder",
+      group: "startup",
+      lifetime: "Build phase",
+      purpose: "把 SystemConfig 和 ObjectCatalog 变成可启动、可审计的 ObjectGraph，是唯一允许创建和注入系统对象的地方。",
+      inputs: ["SystemConfig", "ObjectCatalog", "RobotDefinition", "TaskDefinitionCatalog"],
+      outputs: ["Frozen ObjectGraph", "Compiled TaskGraph[]", "BuildDiagnostics"],
+      owns: ["对象构造顺序", "typed dependency 注入", "依赖环/能力校验", "共享与独占策略"],
+      invariants: ["构建失败不产生半可用 MotionSystem", "对象 ID 唯一", "ActiveObject 在图冻结后才 start"],
+      errors: ["OBJECT_CREATE_FAILED", "BINDING_NOT_FOUND", "DEPENDENCY_CYCLE", "CAPABILITY_MISMATCH"],
+      stack: "C++20 composition root；显式 builder API；不引入通用 service locator",
+      tests: "双 planner/双 IK 绑定、依赖环、构造失败回滚、共享实例和拓扑启动顺序"
     },
     {
       id: "workflow-compiler",
       name: "WorkflowCompiler",
       group: "startup",
       lifetime: "Application / Task type",
-      purpose: "把声明式流程编译为不可变、可执行且已验证的 CompiledWorkflow。",
-      inputs: ["Workflow YAML", "Task schema", "Registry descriptors"],
-      outputs: ["CompiledWorkflow", "诊断列表"],
+      purpose: "把声明式任务配置编译为不可变、类型化且已验证的 TaskGraph。",
+      inputs: ["TaskGraph YAML", "Task schema", "Object descriptors"],
+      outputs: ["Compiled TaskGraph", "诊断列表"],
       owns: ["语法、类型、分支、重试、超时、资源和可达终态检查"],
-      invariants: ["运行时不再解析 YAML", "所有 stage 均有类型", "循环必须有退出/预算"],
-      errors: ["UNKNOWN_STAGE", "INVALID_BRANCH", "UNBOUNDED_RETRY", "RESOURCE_DEADLOCK"],
+      invariants: ["运行时不再解析 YAML", "所有 node 输入输出均有类型", "循环必须有退出/预算"],
+      errors: ["UNKNOWN_NODE", "INVALID_BRANCH", "UNBOUNDED_RETRY", "RESOURCE_DEADLOCK"],
       stack: "C++17 编译器；YAML 输入；稳定内部 AST",
-      tests: "golden workflow、非法图、循环预算、schema 迁移"
+      tests: "golden TaskGraph、非法图、类型错配、循环预算、schema 迁移"
     },
     {
       id: "runtime-graph",
-      name: "RuntimeGraph",
+      name: "ObjectGraph",
       group: "startup",
       lifetime: "Application，版本固定到 Job",
-      purpose: "保存任务命名角色到具体实例的依赖图，解决不同 planner 绑定不同 IK 的问题。",
-      inputs: ["CompiledWorkflow", "RuntimeManifest bindings", "RegistryHub factories"],
+      purpose: "保存本次启动的 MotionObject 实例和 typed dependency，解决不同 planner 绑定不同 IK 的问题。",
+      inputs: ["SystemConfig bindings", "ObjectCatalog factories", "RobotDefinition"],
       outputs: ["不可变 typed handles", "绑定审计图"],
-      owns: ["实例构造顺序", "依赖注入", "共享与独占实例策略"],
-      invariants: ["所有必需角色启动时绑定", "Job 运行中不热切换", "组合兼容性已验证"],
+      owns: ["对象身份", "依赖边", "共享与独占实例策略", "拓扑启动/停止顺序"],
+      invariants: ["所有必需依赖在 READY 前绑定", "Job 运行中不热切换", "组合兼容性已验证"],
       errors: ["BINDING_NOT_FOUND", "CAPABILITY_MISMATCH", "DEPENDENCY_CYCLE"],
-      stack: "C++17 shared/unique handle；GraphBuilder；DOT/JSON 审计输出候选",
+      stack: "C++20 shared/unique typed handle；SystemBuilder；JSON 审计输出候选",
       tests: "双 IK 分角色绑定、组合错误、实例共享和构造失败"
+    },
+    {
+      id: "robot-definition",
+      name: "RobotDefinition + ResourceResolver",
+      group: "startup",
+      lifetime: "Application / immutable shared value",
+      purpose: "把 URDF、SRDF、mesh、标定和执行轴配置解析为统一机器人领域对象，并隔离资源寻址方式。",
+      inputs: ["RobotDefinitionSource config", "asset:// logical URI", "deployment resources"],
+      outputs: ["RobotDefinition", "ResolvedResource", "provenance"],
+      owns: ["运动学/关节/限位/碰撞/工具/Frame/执行合同", "资源校验与版本"],
+      invariants: ["领域对象不保存 ROS package 路径", "关节语义只有一个权威", "缺失资源启动失败"],
+      errors: ["RESOURCE_NOT_FOUND", "ROBOT_DEFINITION_INVALID", "JOINT_CONTRACT_MISMATCH"],
+      stack: "urdfdom/SRDF/FCL loader 可选；filesystem/ament/memory/bundle resolver",
+      tests: "同一 RobotDefinition 从文件、内存和 bundle 加载后语义等价；坏 mesh/关节映射失败"
     },
     {
       id: "job-manager",
@@ -381,16 +416,16 @@ window.MOTION_ARCH_DATA = {
     },
     {
       id: "motion-job",
-      name: "MotionJob",
+      name: "MotionJob + JobContext",
       group: "runtime",
       lifetime: "Single request",
       purpose: "一项任务的全部可恢复状态和关联身份，是事件、Operation、快照和错误的聚合根。",
-      inputs: ["CompiledWorkflow", "TaskRequest", "RuntimeGraph version"],
+      inputs: ["Compiled TaskGraph", "TaskRequest", "ObjectGraph version"],
       outputs: ["JobState", "JobResult", "Journal records"],
       owns: ["mailbox", "取消令牌", "当前 stage", "资源租约", "Operation 索引"],
       invariants: ["状态只由 mailbox 消费者修改", "终态不可逆", "每个外部结果按 operation_id 去重"],
       errors: ["INVALID_TRANSITION", "LATE_RESULT", "JOB_DEADLINE_EXCEEDED"],
-      stack: "C++17 value state + mailbox；持久化格式独立",
+      stack: "C++20 value state + mailbox；JobContext 使用只读图 handle；持久化格式独立",
       tests: "状态机属性测试、重复/乱序结果、取消与终态竞争"
     },
     {
@@ -398,13 +433,13 @@ window.MOTION_ARCH_DATA = {
       name: "MotionEngine",
       group: "runtime",
       lifetime: "Application，处理多个 Job",
-      purpose: "纯领域决策：JobState + Event/Result → NewState + Commands。",
-      inputs: ["JobState", "类型化 Result/Event", "CompiledWorkflow"],
+      purpose: "解释 TaskGraph 的纯领域决策：JobState + Result → NewState + Commands。",
+      inputs: ["JobState", "类型化 Result", "Compiled TaskGraph", "JobContext view"],
       outputs: ["NewState", "Command list", "领域 Event"],
       owns: ["阶段切换", "join 条件", "重试/恢复策略应用", "任务取消语义"],
       invariants: ["不调用 ROS/MoveIt/主站", "相同输入得到相同决策", "不阻塞等待 Operation"],
       errors: ["UNHANDLED_RESULT", "POLICY_EXHAUSTED", "WORKFLOW_INVARIANT_BROKEN"],
-      stack: "C++17 reducer/state machine；std::variant 或明确事件层次",
+      stack: "C++20 reducer/state machine；std::variant 或明确结果层次",
       tests: "表驱动状态转移、失败恢复、并发 join、取消和 replay"
     },
     {
@@ -440,14 +475,28 @@ window.MOTION_ARCH_DATA = {
       name: "OperationScheduler",
       group: "runtime",
       lifetime: "Application",
-      purpose: "把 Command 交给已绑定 Adapter，并管理 worker、并发预算、deadline 和协作取消。",
-      inputs: ["Command", "RuntimeGraph handle", "ResourceLease"],
+      purpose: "把 Command 交给 ObjectGraph 中已绑定对象，并管理 worker、并发预算、deadline 和协作取消。",
+      inputs: ["Command", "ObjectGraph typed handle", "ResourceLease"],
       outputs: ["OperationHandle", "Result envelope"],
       owns: ["固定 worker pool", "per-family concurrency", "OperationId 和取消传播"],
-      invariants: ["注册不创建线程", "队列有界", "非线程安全实例不得并发调用"],
-      errors: ["QUEUE_FULL", "OPERATION_TIMEOUT", "ADAPTER_EXCEPTION", "CANCELED"],
+      invariants: ["注册对象不创建线程", "队列有界", "非线程安全对象不得并发调用"],
+      errors: ["QUEUE_FULL", "OPERATION_TIMEOUT", "OBJECT_EXCEPTION", "CANCELED"],
       stack: "C++17 固定线程池 + async I/O completion；不使用 detached thread",
       tests: "并发上限、超时、异常归一化、取消和 worker 饥饿"
+    },
+    {
+      id: "object-invoker",
+      name: "ObjectInvoker",
+      group: "runtime",
+      lifetime: "Application",
+      purpose: "所有 TaskNode 和 MotionObject 的统一调用 seam，保证错误、关联、计时、取消和日志字段不会散落。",
+      inputs: ["InvocationContext", "typed object handle", "typed input"],
+      outputs: ["typed Result<Output, MotionError>", "DomainEvent", "duration metrics"],
+      owns: ["job/node/object/snapshot/attempt 关联", "deadline/cancel 前后检查", "异常归一化"],
+      invariants: ["Observer 不包围并改变返回值", "未知异常不逃逸 worker", "原始诊断保留但领域错误稳定"],
+      errors: ["PRECONDITION_FAILED", "DEADLINE_EXCEEDED", "OBJECT_EXCEPTION", "POSTCONDITION_FAILED"],
+      stack: "C++20 template invoke + std::expected 候选；OpenTelemetry 仅 Observer adapter",
+      tests: "所有错误路径都带完整关联字段；observer/metrics 故障不改变对象结果"
     },
     {
       id: "trajectory-pipeline",
@@ -460,7 +509,7 @@ window.MOTION_ARCH_DATA = {
       owns: ["段连接连续性", "position/velocity/acceleration/time", "执行 profile 适配"],
       invariants: ["positions/velocities/time_from_start 完整", "时间严格递增", "不跨 attach/release barrier 盲拼"],
       errors: ["DISCONTINUOUS_SEGMENT", "TIME_PARAMETERIZATION_FAILED", "LIMIT_EXCEEDED", "UNSUPPORTED_PROFILE"],
-      stack: "C++17；纯数据与算法 Interface；可包装 MoveIt 时间参数化",
+      stack: "C++20；TrajectoryProcessor 家族；可包装 MoveIt 时间参数化实现",
       tests: "段拼接、同步、限位、字段完整性和轨迹属性测试"
     },
     {
@@ -492,10 +541,24 @@ window.MOTION_ARCH_DATA = {
       tests: "坏 Observer 不影响 Job、背压、顺序和事件关联"
     },
     {
+      id: "communication",
+      name: "Communication",
+      group: "execution",
+      lifetime: "Application / ActiveObject when needed",
+      purpose: "把 MotionSystem 的 typed task/state/execution/event 边界映射到同进程、ROS2、回放或测试环境。",
+      inputs: ["领域请求/结果", "System public facade", "channel config"],
+      outputs: ["Direct/ROS2/Replay/Test channels", "boundary diagnostics"],
+      owns: ["跨边界序列化", "request_id/deadline/cancel 映射", "连接健康与背压"],
+      invariants: ["不成为 Engine 内部总线", "ROS 类型止于 seam", "通信故障映射为稳定领域错误"],
+      errors: ["CHANNEL_UNAVAILABLE", "SCHEMA_MISMATCH", "BACKPRESSURE", "PEER_DISCONNECTED"],
+      stack: "Direct C++ call；rclcpp Action/Topic/TF2；record/replay codec；in-memory test channel",
+      tests: "同一 scenario 在 Direct 与 ROS2 下结果等价；断线、重复、取消和 schema 版本测试"
+    },
+    {
       id: "telemetry-stream",
       name: "TelemetryStream",
       group: "observe",
-      lifetime: "Runtime Pack / Application",
+      lifetime: "RobotRuntime / Application",
       purpose: "承载高频机器人状态、desired/actual/error 和孪生世界状态，供 Snapshot Store 与 Observer 消费。",
       inputs: ["Runtime Provider samples"],
       outputs: ["Versioned state stores", "可降采样 Observer stream"],
@@ -511,52 +574,66 @@ window.MOTION_ARCH_DATA = {
     ["all", "全部"],
     ["startup", "启动组合"],
     ["runtime", "任务运行"],
-    ["capability", "轨迹能力"],
-    ["execution", "执行监督"],
+    ["capability", "运动对象"],
+    ["execution", "执行与边界"],
     ["observe", "观察与遥测"]
   ],
 
   interfaceFamilies: [
     {
-      family: "IK",
-      registry: "TypedRegistry<IIKSolver>",
-      interfaces: ["IIKSolver", "IIKCandidateGenerator", "IConstrainedIKSolver"],
-      adapters: ["解析 IK", "BioIK/multi-seed", "Fake IK"],
-      compatibility: "robot profile、DOF、joint group、frame、单/双臂、候选能力、线程安全"
+      family: "机器人定义源",
+      registry: "MotionObject → RobotDefinitionSource",
+      interfaces: ["RobotDefinitionSource", "ResourceResolver"],
+      adapters: ["URDF/SRDF", "Serialized", "ROS Parameter", "InMemory", "Generated"],
+      compatibility: "资源版本、关节语义、Frame、工具、碰撞模型、执行轴合同和来源 provenance"
     },
     {
-      family: "Planning",
-      registry: "TypedRegistry<IExtractPlanner> / TypedRegistry<ILoadedPlanner>",
-      interfaces: ["IExtractPlanner", "ILoadedPlanner", "IJointPathPlanner"],
-      adapters: ["MoveIt Adapter", "自研规划 Adapter", "Fake Planner"],
-      compatibility: "所需 IK Interface、场景语义、附着物、约束类型、并发上下文"
+      family: "逆运动学",
+      registry: "MotionObject → IKSolver",
+      interfaces: ["IKSolver", "IKCandidateGenerator", "ConstrainedIKSolver"],
+      adapters: ["解析 IK", "BioIK / multi-seed", "MoveIt IK", "Fake IK"],
+      compatibility: "RobotDefinition、DOF、joint group、frame、单/双臂、候选能力和线程安全"
     },
     {
-      family: "Trajectory",
-      registry: "TypedRegistry<ITrajectoryStage>",
-      interfaces: ["ITrajectoryComposer", "ITimeParameterizer", "ITrajectoryValidator"],
-      adapters: ["MoveIt time parameterization", "领域验证器", "Deterministic Fake"],
+      family: "运动规划",
+      registry: "MotionObject → MotionPlanner",
+      interfaces: ["ExtractPlanner", "LoadedPlanner", "JointPathPlanner"],
+      adapters: ["MoveIt/OMPL", "自研规划", "Planner+IK 组合对象", "Fake Planner"],
+      compatibility: "显式 IKSolver typed dependency、场景语义、附着物、约束类型和 worker context"
+    },
+    {
+      family: "轨迹处理",
+      registry: "MotionObject → TrajectoryProcessor",
+      interfaces: ["TrajectoryComposer", "TrajectorySmoother", "TimeParameterizer", "TrajectoryValidator"],
+      adapters: ["MoveIt 时间参数化", "自研拼接/平滑", "领域验证器", "Deterministic Fake"],
       compatibility: "关节集合、速度/加速度字段、插值 profile、同步轴组"
     },
     {
-      family: "Execution",
-      registry: "TypedRegistry<IBufferedTrajectoryExecutor>",
-      interfaces: ["IBufferedTrajectoryExecutor", "IRobotStateSource", "IRuntimeHealth"],
+      family: "机器人运行环境",
+      registry: "ActiveObject → RobotRuntime",
+      interfaces: ["BufferedTrajectoryExecutor", "RobotStateSource", "RuntimeHealth", "TelemetrySource"],
       adapters: ["RealRobot", "DigitalTwin", "Fake", "Replay"],
       compatibility: "轴合同、插值方式、必需轨迹字段、控制周期、取消/停止/反馈能力"
     },
     {
-      family: "Primitive / Tool",
-      registry: "TypedRegistry<IPrimitive> / TypedRegistry<IToolIO>",
-      interfaces: ["IAttachPayload", "IReleasePayload", "IToolIO"],
-      adapters: ["真空/电磁阀 Adapter", "Twin Tool", "Fake Tool"],
+      family: "工具与元动作",
+      registry: "MotionObject → ToolRuntime / TaskNode",
+      interfaces: ["AttachPayload", "ReleasePayload", "ToolIO", "MotionPrimitive"],
+      adapters: ["真空/电磁阀", "Twin Tool", "Fake Tool", "Approach/Retreat 节点"],
       compatibility: "工具型号、确认反馈、超时、幂等、安全状态"
     },
     {
-      family: "Observer",
-      registry: "TypedRegistry<IEventSink>",
-      interfaces: ["IEventSink", "ITelemetrySink"],
-      adapters: ["JSONL", "Rerun", "RViz", "metrics", "ROS feedback"],
+      family: "边界通信",
+      registry: "ActiveObject → Communication",
+      interfaces: ["TaskChannel", "StateChannel", "ExecutionChannel", "EventChannel"],
+      adapters: ["Direct", "ROS2", "Replay", "Test"],
+      compatibility: "schema 版本、可靠性、取消、deadline、背压、序列化和部署拓扑"
+    },
+    {
+      family: "观察与生命周期",
+      registry: "MotionObject → Observer / LifecycleListener",
+      interfaces: ["EventObserver", "TelemetryObserver", "LifecycleListener"],
+      adapters: ["JSONL", "Rerun", "RViz", "metrics", "boundary feedback"],
       compatibility: "可靠/尽力投递、队列容量、序列化格式、采样频率"
     }
   ],
@@ -679,28 +756,28 @@ window.MOTION_ARCH_DATA = {
     }
   ],
 
-  runtimePacks: [
+  runtimeOptions: [
     {
       id: "real",
-      name: "RealRobotRuntimePack",
+      name: "RealRobotRuntime",
       status: "生产",
-      backend: "EtherCAT 主站 + ros2_control/自定义执行入口",
-      registers: ["IBufferedTrajectoryExecutor", "IRobotStateSource", "IRuntimeHealth", "ITelemetrySource", "可选 IToolIO"],
-      guarantees: ["完整轨迹缓存", "确定性插值", "ROS 语义状态", "取消/停止/错误反馈", "硬件安全链"],
+      backend: "Execution/State 对象 + EtherCAT 主站",
+      registers: ["BufferedTrajectoryExecutor", "RobotStateSource", "RuntimeHealth", "TelemetrySource", "可选 ToolRuntime"],
+      guarantees: ["完整轨迹缓存", "确定性插值", "领域正向关节语义", "取消/停止/错误反馈", "硬件安全链"],
       mustNot: ["让任务知道从站编号", "把方向映射散落到算法", "用 topic 假装可靠 action result"]
     },
     {
       id: "twin",
-      name: "DigitalTwinRuntimePack",
+      name: "DigitalTwinRuntime",
       status: "开发/验收",
-      backend: "Kinematic Twin；未来可增加 Physics Adapter",
+      backend: "共享 TwinWorld 的一组准确 ActiveObject",
       registers: ["TwinBufferedExecutor", "TwinRobotStateSource", "TwinRuntimeHealth", "TwinTelemetrySource", "TwinFaultInjector", "TwinClock"],
       guarantees: ["同一轨迹字段合同", "可配置同一插值 profile", "确定性时间缩放", "取消和故障注入", "可回放 world state"],
       mustNot: ["直接成为 Observer", "绕开执行合同改 joint state", "把仿真特例写进 MotionEngine"]
     },
     {
       id: "fake",
-      name: "FakeRuntimePack",
+      name: "FakeRobotRuntime",
       status: "单元测试",
       backend: "进程内确定性 Fake + ManualClock",
       registers: ["FakeExecutor", "FakeStateSource", "FakeHealth", "InMemoryTelemetry"],
@@ -709,7 +786,7 @@ window.MOTION_ARCH_DATA = {
     },
     {
       id: "replay",
-      name: "ReplayRuntimePack",
+      name: "ReplayRobotRuntime",
       status: "回归/诊断",
       backend: "记录的 Snapshot、Result、Event、Telemetry",
       registers: ["ReplayStateSource", "ReplayExecutionAdapter", "ReplayClock"],
@@ -719,7 +796,7 @@ window.MOTION_ARCH_DATA = {
   ],
 
   twinModules: [
-    ["DigitalTwinRuntimePack", "安装整个孪生运行能力，共享一个 TwinWorld backend，但对外注册多个准确 Interface。"],
+    ["DigitalTwinRuntime", "由 ObjectGraph 组合的孪生对象集合，共享一个 TwinWorld backend，但对外提供多个准确接口。"],
     ["TwinWorld", "维护不可变/版本化机器人、工具、场景和执行状态；不直接渲染。"],
     ["TwinBufferedExecutor", "验证并缓存完整定时轨迹，按 ExecutionCapabilities 插值和产生 desired state。"],
     ["TwinRobotModel", "根据命令推进 joint state；第一阶段是运动学模型，动力学/接触为可替换 Adapter。"],
@@ -740,49 +817,52 @@ window.MOTION_ARCH_DATA = {
     ["健康", "READY 前均可做无运动 capability/health probe"]
   ],
 
-  runtimeManifestExample: `runtime:
-  robot_profile: alfa_v1_0
-  task_packs: [dual_grasp]
-  runtime_pack: digital_twin       # real_robot | digital_twin | fake | replay
+  runtimeManifestExample: `system:
+  robot_definition:
+    source: urdf_srdf
+    model: asset://robots/alfa_v10/model.urdf
+  communication: direct            # direct | ros2 | replay | test
 
-instances:
-  ik.grasp:
-    use: bioik.multi_seed
-  ik.loaded_goal:
-    use: analytic.v10
+objects:
+  ik.extract:
+    type: bioik.multi_seed
+  ik.loaded:
+    type: analytic.alfa_v10
   planner.extract:
-    use: extract.rrt
-    bind:
-      candidate_ik: ik.grasp
+    type: extract.rrt
+    dependencies:
+      candidate_ik: ik.extract
   planner.loaded:
-    use: loaded.rrt_connect
-    bind:
-      goal_ik: ik.loaded_goal
+    type: loaded.rrt_connect
+    dependencies:
+      goal_ik: ik.loaded
+  robot.runtime:
+    type: digital_twin              # real_robot | digital_twin | fake | replay
 
 tasks:
   dual_grasp:
-    workflow: workflows/dual_grasp.yaml
-    bind:
-      extract: planner.extract
-      loaded: planner.loaded
-      execution: runtime.buffered_execution
+    graph: tasks/dual_grasp.yaml
+    roles:
+      extract_planner: planner.extract
+      loaded_planner: planner.loaded
+      execution: robot.runtime
 
 observers: [journal.jsonl, rerun, metrics]`,
 
   testLevels: [
     {
       level: "L0",
-      name: "领域与 Module 单测",
+      name: "领域值与对象单测",
       ros: "否",
-      runtime: "FakeRuntimePack + ManualClock",
-      verifies: ["Workflow/Engine 状态", "Registry/RuntimeGraph", "Snapshot", "TrajectoryPipeline", "错误与恢复"],
+      runtime: "InMemory ObjectGraph + ManualClock",
+      verifies: ["TaskGraph/Engine 状态", "ObjectCatalog/ObjectGraph", "Snapshot", "TrajectoryPipeline", "错误与恢复"],
       gate: "每次提交"
     },
     {
       level: "L1",
       name: "无 ROS 纵向任务链",
       ros: "否",
-      runtime: "Fake IK/Planner/Tool/Execution",
+      runtime: "DirectCommunication + Fake IK/Planner/Tool/Execution",
       verifies: ["YAML → READY → Job Completed", "双 IK 分角色绑定", "Event journal", "取消/超时"],
       gate: "每次提交"
     },
@@ -790,15 +870,15 @@ observers: [journal.jsonl, rerun, metrics]`,
       level: "L2",
       name: "运动学数字孪生",
       ros: "可选",
-      runtime: "DigitalTwinRuntimePack",
+      runtime: "DigitalTwinRuntime objects",
       verifies: ["完整定时轨迹", "速度字段", "插值与反馈", "状态/场景一致性", "Rerun"],
       gate: "PR / nightly"
     },
     {
       level: "L3",
-      name: "ROS Adapter 集成",
+      name: "ROS Communication 集成",
       ros: "是",
-      runtime: "ROS Action/topic Adapter + Twin",
+      runtime: "Ros2Communication + DigitalTwinRuntime",
       verifies: ["序列化合同", "命名/单位映射", "callback/取消", "launch 与进程失联"],
       gate: "PR / integration"
     },
@@ -814,7 +894,7 @@ observers: [journal.jsonl, rerun, metrics]`,
       level: "L5",
       name: "HIL / 真机小运动",
       ros: "真实部署",
-      runtime: "RealRobotRuntimePack",
+      runtime: "Ros2/DirectCommunication + RealRobotRuntime",
       verifies: ["方向/零位", "反馈语义", "跟随误差", "急停/取消", "最终到位"],
       gate: "人工安全审批"
     }
@@ -823,7 +903,7 @@ observers: [journal.jsonl, rerun, metrics]`,
   testDoubles: [
     {
       target: "上游任务源",
-      double: "TaskFixture / MockIngressAdapter",
+      double: "TaskFixture / TestCommunication",
       simulates: "合法/非法任务、重复 request_id、deadline、取消",
       doesNotProve: "真实感知精度和抓取选择质量"
     },
@@ -885,11 +965,11 @@ observers: [journal.jsonl, rerun, metrics]`,
   ],
 
   acceptanceSlices: [
-    ["A", "架构内核", "无 ROS：manifest → register → bind → READY → fake dual-grasp → completed；事件和错误可审计。"],
+    ["A", "对象系统内核", "无 ROS：SystemConfig → ObjectGraph → READY → TaskGraph → completed；事件和错误可审计。"],
     ["B", "双 IK 绑定", "同一次启动注册两种 IK，extract/loaded planner 分别注入正确实例；错误组合在启动失败。"],
     ["C", "轨迹合同", "TrajectoryPipeline 产出 position + velocity + time；Fake Master 校验完整缓存和插值反馈。"],
-    ["D", "数字孪生", "只替换 Runtime Pack，MotionEngine 零修改；支持取消、故障注入和 Rerun。"],
-    ["E", "当前算法接入", "用 Adapter 包装现有 IK/抽离/负重 Implementation，新旧结果可 replay/diff。"],
+    ["D", "数字孪生", "只替换 RobotRuntime 对象绑定，MotionEngine 零修改；支持取消、故障注入和 Rerun。"],
+    ["E", "当前算法接入", "让现有 IK/抽离/负重 Implementation 实现准确家族接口，新旧结果可 replay/diff。"],
     ["F", "主站 SIL", "软件主站使用真实插值与错误合同，验证轴同步、feedback 和 controlled stop。"],
     ["G", "真机 canary", "单段、小幅、低速，逐级验证方向、速度、取消和最终状态；仅一个执行权威。"]
   ],
@@ -897,23 +977,23 @@ observers: [journal.jsonl, rerun, metrics]`,
   stackLayers: [
     {
       layer: "领域核心",
-      choices: ["C++17", "标准库 value types", "std::variant/明确类型", "std::chrono", "Result<T, MotionError>"],
+      choices: ["C++20 候选", "标准库 value types", "std::variant/明确类型", "std::chrono", "Result<T, MotionError>"],
       rule: "不得依赖 rclcpp、MoveIt、trajectory_msgs、EtherCAT SDK 或 Python runtime。"
     },
     {
       layer: "运行核心",
-      choices: ["C++17", "固定 worker pool", "mailbox", "immutable snapshots", "yaml-cpp 候选"],
-      rule: "Workflow 运行时使用编译结果；不使用 detached thread；不执行任意配置脚本。"
+      choices: ["C++20 候选", "ObjectGraph", "固定 worker pool", "mailbox", "immutable snapshots", "yaml-cpp 候选"],
+      rule: "TaskGraph 运行时只使用编译结果；不使用 detached thread；不执行任意配置脚本。"
     },
     {
-      layer: "算法与规划 Adapter",
+      layer: "算法对象实现",
       choices: ["MoveIt 2", "OMPL", "BioIK/解析 IK", "Eigen", "FCL/PlanningScene"],
-      rule: "外部类型在 Adapter Seam 内转换；线程上下文按 Implementation 实际安全性隔离。"
+      rule: "实现准确对象家族接口；MoveIt 类型不越过接口 seam；上下文按实际线程安全性隔离。"
     },
     {
-      layer: "ROS Adapter",
+      layer: "通信对象",
       choices: ["ROS 2 Humble", "rclcpp/rclpy", "Action/Topic/TF2", "robot_motion_interfaces"],
-      rule: "ROS 用于跨进程合同和部署，不作为 MotionEngine 的内部消息总线。"
+      rule: "Direct/ROS2/Replay/Test 实现同族边界合同；ROS 不作为 MotionEngine 内部消息总线。"
     },
     {
       layer: "执行与主站",
@@ -922,7 +1002,7 @@ observers: [journal.jsonl, rerun, metrics]`,
     },
     {
       layer: "数字孪生",
-      choices: ["C++17 kinematic execution core 候选", "Python 3 配置/工具", "Manual/Scaled clock", "可选 physics Adapter"],
+      choices: ["C++20 kinematic execution core 候选", "Python 3 配置/工具", "Manual/Scaled clock", "可选 physics backend"],
       rule: "先保证执行合同和时间语义一致，再按需求增加动力学，不把可视化当孪生核心。"
     },
     {
@@ -937,80 +1017,80 @@ observers: [journal.jsonl, rerun, metrics]`,
     }
   ],
 
-  targetPackages: [
+  targetLayout: [
     {
-      name: "robot_motion_core",
-      status: "建议新增",
-      contents: ["领域 ID/类型", "MotionError/Result", "Command/Event/Snapshot", "能力家族 Interface", "TimedJointTrajectory"],
-      dependencies: "C++ 标准库；尽量不依赖 ROS/MoveIt",
-      note: "提供高 Leverage 的稳定 Interface，不成为杂物 common。"
+      name: "include/alfa_motion/",
+      status: "公共对象合同",
+      contents: ["MotionSystem", "Value Object", "MotionObject families", "Result/MotionError", "TimedJointTrajectory"],
+      dependencies: "C++ 标准库；不暴露 ROS、MoveIt、EtherCAT 或部署路径类型",
+      note: "公共面保持小；实现细节不因为放在同一仓库就变成公共 API。"
     },
     {
-      name: "robot_motion_runtime",
-      status: "建议新增",
-      contents: ["MotionApplication", "RegistryHub/RuntimeGraph", "WorkflowCompiler", "JobManager/Engine", "Scheduler/Supervisor/EventHub"],
-      dependencies: "robot_motion_core；配置解析；不依赖具体算法",
-      note: "运行内核可在无 ROS executable 中直接测试。"
+      name: "src/system/ + src/context/",
+      status: "启动与请求上下文",
+      contents: ["SystemBuilder", "ObjectCatalog/ObjectGraph", "SystemConfig", "JobContext", "ObjectInvoker"],
+      dependencies: "只依赖公共对象合同和配置解析",
+      note: "负责组合，不承载 IK、规划或设备协议业务。"
     },
     {
-      name: "robot_motion_task_dual_grasp",
-      status: "稳定后新增",
-      contents: ["DualGraspTaskPack", "Workflow YAML", "Primitive/Policy 组合", "任务 schema"],
-      dependencies: "core + runtime extension Interface",
-      note: "先在 runtime 内验证语义，任务稳定后再独立成 package，避免浅 Package。"
+      name: "src/robot/ + src/scene/",
+      status: "机器人事实",
+      contents: ["RobotDefinition", "RobotDefinitionSource", "ResourceResolver", "VersionedStore", "SnapshotManager"],
+      dependencies: "loader 可以依赖 urdfdom/FCL；领域值不依赖 ROS package 寻址",
+      note: "原 description 资产成为 resources，原配置节点成为 source/resolver 实现。"
     },
     {
-      name: "robot_motion_ik_service",
-      status: "当前复用/逐步 Adapter 化",
-      contents: ["现有 IK Implementation", "IIKSolver Adapter", "ROS ingress 可保留"],
-      dependencies: "MoveIt/BioIK/robot model",
-      note: "不同 IK 通过 typed family 注册；planner 依赖在 RuntimeGraph 注入。"
+      name: "src/task/",
+      status: "任务定义与运行",
+      contents: ["TaskDefinition", "TaskGraph/Compiler", "JobManager", "MotionEngine", "Guard/Primitive/Policy"],
+      dependencies: "依赖对象家族接口；通过命名角色引用 ObjectGraph typed handle",
+      note: "任务类型先留在同一程序；只有独立发布产生真实价值时才考虑拆制品。"
     },
     {
-      name: "robot_motion_planning_service",
-      status: "当前复用/逐步 Adapter 化",
-      contents: ["现有规划 Implementation", "Extract/Loaded Adapter", "场景类型转换"],
-      dependencies: "MoveIt/OMPL/IK Adapter",
-      note: "先包装，不在首个架构提交里搬动成熟算法。"
+      name: "src/algorithm/",
+      status: "算法对象实现",
+      contents: ["ik/", "planning/", "trajectory/", "组合 planner", "algorithm config schema"],
+      dependencies: "Eigen、MoveIt、OMPL、BioIK 等只停留在具体实现侧",
+      note: "IK/抽离/负重分别实现准确家族接口；planner 的 IK 依赖由构造绑定。"
     },
     {
-      name: "robot_motion_digital_twin",
-      status: "深化为 Runtime Pack",
-      contents: ["TwinWorld", "Twin execution/state/health Adapter", "FaultInjector", "Rerun Observer"],
-      dependencies: "core/runtime；ROS 仅外部接入；可选物理 backend",
-      note: "当前 Python twin 可先作为 Adapter，插值语义随后与真机对齐。"
+      name: "src/execution/ + src/runtime/",
+      status: "执行与运行环境",
+      contents: ["ExecutionSupervisor", "RealRobot", "DigitalTwin", "Fake", "Replay", "ToolRuntime"],
+      dependencies: "领域执行合同；具体 backend 可依赖 EtherCAT SDK 或孪生引擎",
+      note: "真机与孪生可以由多个对象共享 backend，不需要包装成一个巨大 RuntimePack 类。"
     },
     {
-      name: "robot_motion_interfaces",
-      status: "保留跨进程合同",
-      contents: ["ROS msg/srv/action", "版本和稳定性说明"],
-      dependencies: "ROS IDL",
-      note: "不承载所有进程内领域类型；领域 core 与 ROS message 由 Adapter 转换。"
+      name: "src/communication/ + src/observer/",
+      status: "边界与旁路",
+      contents: ["Direct", "ROS2", "Replay", "Test", "EventHub", "JSONL/Rerun/RViz/metrics"],
+      dependencies: "ROS 依赖只出现在 ros2 实现；Observer 只消费 Event/Telemetry/Snapshot",
+      note: "通信决定如何跨系统边界，不改变 MotionEngine 内部的 Command/Result 语义。"
     },
     {
-      name: "robot_motion_observer",
-      status: "需求成熟后新增",
-      contents: ["JSONL", "Rerun/RViz", "metrics", "replay tooling"],
-      dependencies: "Event/Telemetry Interface",
-      note: "一个 package 可包含多个 Observer Adapter，避免每种输出一个浅 package。"
+      name: "resources/ + config/ + apps/ + tests/ + integrations/",
+      status: "资产、入口与验证",
+      contents: ["robots/alfa_v10", "systems/objects/tasks", "CLI/ROS app", "unit/component/scenario", "ROS2 package.xml/IDL"],
+      dependencies: "apps 选择 Communication；integrations/ros2 是部署壳，不是领域架构根",
+      note: "整个目标仍是一个程序仓库；是否生成多个二进制由部署决定。"
     }
   ],
 
   dependencyRules: [
-    ["robot_motion_core", "只向标准库；不得反向依赖 runtime、ROS、MoveIt 或具体任务。"],
-    ["robot_motion_runtime", "依赖 core；只认识能力 Interface 和 TaskPack 扩展点。"],
-    ["Task Pack", "依赖 core/runtime Interface；不能依赖某个具体 IK 类，除非明确注册为不可分割组合。"],
-    ["Algorithm Implementation", "依赖 core Interface 和所需数学/规划库；不依赖 MotionEngine。"],
-    ["ROS Adapter", "依赖 core/runtime + ROS；负责领域类型与 ROS 类型转换。"],
-    ["Runtime Pack", "安装 execution/state/health/telemetry Adapter；真机与孪生不被上层特殊判断。"],
-    ["Observer", "只消费 Event/Telemetry/Snapshot；不能依赖 Job 可变内部状态。"]
+    ["Value Object", "只依赖标准库和基础数学类型；不得持有 ROS、MoveIt、EtherCAT 或文件路径语义。"],
+    ["MotionSystem / Task runtime", "只依赖对象家族接口和领域值，不依赖某个具体 IK、通信或运行环境类。"],
+    ["Algorithm object", "依赖准确家族接口、RobotDefinition 和所需数学/规划库；不反向依赖 MotionEngine。"],
+    ["Planner → IK", "通过构造参数或命名 typed role 显式依赖；不可在方法内部按字符串查全局注册表。"],
+    ["Communication", "依赖系统公共门面和领域合同；ROS2 类型在 seam 转换，不进入 JobContext。"],
+    ["RobotRuntime", "实现 execution/state/health/telemetry 合同；真机与孪生不被上层特殊判断。"],
+    ["Observer", "只消费 Event/Telemetry/Snapshot；不能读取或修改 Job 的可变内部状态。"]
   ],
 
   configFiles: [
-    ["runtime.yaml", "启动选择", "robot profile、Task Pack、实现实例、bindings、Runtime Pack、Observer、并发预算"],
-    ["workflows/*.yaml", "任务流程", "stage、Command、分支、join、retry、timeout、barrier；不写任意代码"],
-    ["algorithms/*.yaml", "Implementation 参数", "seed、timeout、规划预算等；由具体 Adapter schema 验证"],
-    ["robots/*.yaml", "机器人运行合同", "profile id、工具、标定引用、执行轴组和安全限制引用"],
+    ["systems/*.yaml", "启动选择", "RobotDefinitionSource、对象实例、typed bindings、Communication、Observer、并发预算"],
+    ["tasks/*.yaml", "任务流程", "node、typed port、分支、join、retry、timeout、guard、barrier；不写任意代码"],
+    ["objects/*.yaml", "对象参数", "seed、timeout、规划预算、backend 等；由具体 MotionObject schema 验证"],
+    ["robots/*.yaml", "机器人运行合同", "资源 URI、工具、标定、执行轴组和安全限制引用"],
     ["execution_profiles/*.yaml", "执行能力镜像/期望", "字段、插值、限制、stop/feedback；启动时与 provider 实际能力比对"],
     ["tests/scenarios/*.yaml", "测试情景", "事实 fixture、Fake 结果、故障注入和预期 Event/Result"]
   ],
@@ -1018,60 +1098,60 @@ observers: [journal.jsonl, rerun, metrics]`,
   migrationPhases: [
     {
       phase: "0",
-      name: "冻结架构合同",
-      changes: ["确认术语和责任", "建立本门户和决策记录", "定义 TimedJointTrajectory 与 ExecutionCapabilities 草案"],
+      name: "冻结对象语言",
+      changes: ["确认 MotionSystem/ObjectGraph/TaskGraph/JobContext", "建立本门户和决策记录", "定义 TimedJointTrajectory 与 ExecutionCapabilities 草案"],
       evidence: "评审通过；不改变现有运行"
     },
     {
       phase: "1",
-      name: "薄运行内核",
-      changes: ["新增 core/runtime package 骨架", "RegistryHub/RuntimeGraph", "Job/Engine/Scheduler 最小实现", "FakeRuntimePack"],
-      evidence: "无 ROS 纵向任务完成；双 IK 绑定测试"
+      name: "单程序薄对象骨架",
+      changes: ["建立 include/src/config/tests 目录", "MotionObject/ObjectCatalog/ObjectGraph", "MotionSystem 生命周期", "InMemory ResourceResolver"],
+      evidence: "无 ROS 启动成功/失败测试；对象依赖图可审计"
     },
     {
       phase: "2",
-      name: "轨迹与执行骨架",
-      changes: ["TrajectoryPipeline", "速度字段合同", "ExecutionSupervisor", "Fake Master interpolation/feedback"],
-      evidence: "完整轨迹缓存、插值、取消和 final-state 测试"
+      name: "第一条任务纵向链",
+      changes: ["TaskDefinition/TaskGraph", "JobContext/Engine/Invoker", "DirectCommunication", "Fake IK/Planner/Execution"],
+      evidence: "无 ROS config → READY → submit → completed；双 IK typed binding 测试"
     },
     {
       phase: "3",
-      name: "数字孪生 Runtime Pack",
-      changes: ["当前 twin 包装/深化", "同 profile 插值", "FaultInjector/clock", "Event + Telemetry Observer"],
-      evidence: "只换 Runtime Pack，Engine 零修改；Rerun 可审计"
+      name: "轨迹与执行对象",
+      changes: ["TrajectoryProcessor", "速度字段合同", "ExecutionSupervisor", "Fake Master interpolation/feedback"],
+      evidence: "完整轨迹缓存、插值、取消和 final-state 测试"
     },
     {
       phase: "4",
-      name: "当前算法纵向接入",
-      changes: ["包装现有 IK", "包装 extract/loaded planning", "场景 Snapshot", "DualGraspTaskPack"],
+      name: "当前算法对象化",
+      changes: ["现有 IK 实现家族接口", "extract/loaded planner + 显式 IK 依赖", "场景 Snapshot", "DualGrasp TaskDefinition"],
       evidence: "同一任务在旧链和新链 planning-only 对比"
     },
     {
       phase: "5",
-      name: "ROS/上游接入",
-      changes: ["ROS Ingress Adapter", "ROS state/scene Adapter", "兼容现有 action", "新 task executor 旁路运行"],
-      evidence: "launch integration；不产生双执行权威"
+      name: "数字孪生对象接入",
+      changes: ["TwinWorld 共享 backend", "同 profile 插值", "FaultInjector/clock", "Event + Telemetry Observer"],
+      evidence: "只换 RobotRuntime binding，Engine 零修改；Rerun 可审计"
     },
     {
       phase: "6",
-      name: "主站 SIL 与真机 canary",
-      changes: ["RealRobotRuntimePack", "实际 ExecutionCapabilities", "受控停止和错误映射", "逐段切换执行入口"],
-      evidence: "SIL → HIL → 小幅真机；旧入口可回退"
+      name: "ROS2 Communication 边界",
+      changes: ["Ros2Communication", "领域/ROS 类型转换", "兼容现有 action/topic", "新 MotionSystem 旁路运行"],
+      evidence: "Direct 与 ROS2 对同一 scenario 结果等价；不产生双执行权威"
     },
     {
       phase: "7",
-      name: "收敛与删除旧路径",
-      changes: ["迁移稳定 Implementation", "删除重复 glue/配置", "冻结正式合同", "更新 system_flow 当前状态"],
-      evidence: "新链成为唯一权威；回归、文档、部署均通过"
+      name: "主站 SIL、真机 canary 与收敛",
+      changes: ["RealRobotRuntime", "实际 ExecutionCapabilities", "受控停止和错误映射", "删除重复 ROS glue/配置"],
+      evidence: "SIL → HIL → 小幅真机；新链成为唯一权威且旧入口可按门禁回退"
     }
   ],
 
   nonGoals: [
     "首轮不重写 IK、抽离或负重算法数学细节。",
     "首轮不让 YAML 变成图灵完备脚本语言。",
-    "首轮不把每个类拆成一个 ROS2 Package。",
+    "目标不按类或能力家族拆 ROS2 package；只有独立部署/发布证据才能新增制品。",
     "首轮不把 MotionEngine 放进硬实时 EtherCAT 周期。",
-    "首轮不在没有真实第二个 Adapter 时制造大量空 Interface。",
+    "首轮不在输入、不变量和错误模式尚未分化时制造大量空 Interface。",
     "首轮不同时修改算法、文件位置、ROS 合同和真机执行全部层次。",
     "测试替身不能替代 SIL/HIL；每一级只对自己的证据负责。"
   ]

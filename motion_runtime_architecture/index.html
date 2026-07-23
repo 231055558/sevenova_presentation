@@ -21,25 +21,25 @@
   <main>
     <section class="hero">
       <div class="hero-copy">
-        <span class="kicker">目标架构 · 领域核心与外部适配</span>
-        <h2>先完成启动组合，再让每项任务沿冻结的运行时依赖图运行。</h2>
+        <span class="kicker">目标架构 v1 · 统一对象系统</span>
+        <h2>一个 MotionSystem，启动构建对象图，任务只运行任务图。</h2>
         <p>
-          目标不是把 ROS 节点换一套名字，而是形成一个可以无 ROS 测试、可组合算法、可替换真机与数字孪生、
-          能审计完整执行过程的运控运行时。算法实现保持可迭代，任务和执行接口保持清晰。
+          目标不是再造一批 ROS 包，而是形成一个可直接调用、可接 ROS、可组合算法、可替换真机与数字孪生、
+          能审计完整执行过程的运控程序。URDF、MoveIt、ROS 和孪生都在对象系统中拥有明确位置。
         </p>
         <div class="badge-row">
           <span class="badge ready">启动失败即关闭入口</span>
-          <span class="badge typed">类型安全注册</span>
+          <span class="badge typed">类型安全对象图</span>
           <span class="badge concurrent">有界并发</span>
           <span class="badge realtime">主站实时插值</span>
-          <span class="badge replaceable">真机/孪生同族适配器</span>
+          <span class="badge replaceable">Direct/ROS2 可切换</span>
         </div>
       </div>
       <aside class="hero-aside">
         <strong>阅读这份文档时请区分</strong>
         <p>
-          `docs/system_flow` 描述当前仓库；本门户描述目标架构 v0。新的模块和软件包只有在纵向切片中产生
-          实际收益后才落地，不以类数量衡量架构完成度。
+          `docs/system_flow` 描述当前仓库；本门户描述目标架构 v1。ObjectGraph 是启动实例关系，
+          TaskGraph 是任务流程；C++ 目录、ROS package 和运行进程都不能代替这两个概念。
         </p>
       </aside>
     </section>
@@ -64,15 +64,15 @@
             <div class="context-connector connector-down connector-01" aria-hidden="true"><span>01</span></div>
 
             <article class="diagram-node context-node context-facts">
-              <span class="node-kind">事实来源</span>
-              <h3>机器人事实源</h3>
-              <p>机器人模型、场景、标定与设备能力。</p>
+              <span class="node-kind">资产与证据</span>
+              <h3>机器人资源 / 世界证据</h3>
+              <p>URDF、mesh、标定、场景更新与设备能力。</p>
             </article>
             <div class="context-connector connector-right connector-02" aria-hidden="true"><span>02</span></div>
 
             <article class="diagram-node context-node context-core primary-node">
               <span class="node-kind">目标系统</span>
-              <h3>运控运行时</h3>
+              <h3>MotionSystem</h3>
               <code>robot_motion_control</code>
               <p>把任务意图转化为可验证、可执行、可追踪的运动结果。</p>
             </article>
@@ -80,8 +80,8 @@
             <div class="context-connector connector-right connector-03" aria-hidden="true"><span>03</span></div>
             <article class="diagram-node context-node context-provider">
               <span class="node-kind">执行环境</span>
-              <h3>运行时提供者</h3>
-              <p>真机主站、数字孪生、仿真或测试替身。</p>
+              <h3>运行环境 Backend</h3>
+              <p>真机主站、数字孪生、回放或测试替身。</p>
             </article>
 
             <div class="context-connector connector-down connector-04" aria-hidden="true"><span>04</span></div>
@@ -99,7 +99,7 @@
             </div>
             <ol>
               <li><span>01</span><div><strong>任务请求 / 结果</strong><p>任务系统表达目标，不直接挑选底层算法或执行设备。</p></div></li>
-              <li><span>02</span><div><strong>带版本的事实</strong><p>每项任务读取可追溯的机器人、场景与标定快照。</p></div></li>
+              <li><span>02</span><div><strong>资源与带版本证据</strong><p>Source/Resolver 构建 RobotDefinition，Snapshot 固定实时世界事实。</p></div></li>
               <li><span>03</span><div><strong>执行合同 / 状态</strong><p>同一份领域合同可绑定真机、孪生、仿真或测试实现。</p></div></li>
               <li><span>04</span><div><strong>事件 / 遥测</strong><p>观察者订阅事实，但不进入任务控制路径。</p></div></li>
             </ol>
@@ -129,7 +129,7 @@
         <div>
           <span class="kicker">系统分层</span>
           <h2>整体分层</h2>
-          <p>层次表达依赖方向，不要求每一层独立成 ROS2 软件包。只有在独立构建、测试、部署或发布有价值时才拆分软件包。</p>
+          <p>层次表达对象责任和依赖方向，不对应 ROS2 软件包。目标先收敛到一个程序目录，只有独立部署或发布有证据时才拆物理制品。</p>
         </div>
         <p class="side-note">上层表达任务意图，下层提供能力和事实；任何外部框架都通过适配器穿过明确边界。</p>
       </div>
@@ -141,7 +141,7 @@
         <div>
           <span class="kicker">端到端流程</span>
           <h2>从进程启动到任务收口</h2>
-          <p>启动阶段确定“可以做什么以及由谁做”，任务阶段只沿已经构建的依赖图运行。</p>
+          <p>启动阶段把配置变成冻结 ObjectGraph；任务阶段创建 JobContext，只沿已编译 TaskGraph 和 typed handle 运行。</p>
         </div>
       </div>
       <div id="overall-flow" class="numbered-flow"></div>
@@ -150,9 +150,9 @@
     <section class="section">
       <div class="section-heading">
         <div>
-          <span class="kicker">三个架构锚点</span>
-          <h2>三个最重要的架构对象</h2>
-          <p>任务包、运行时依赖图和单次运动任务分别回答任务类型、启动绑定和单次运行的问题。</p>
+          <span class="kicker">四个架构锚点</span>
+          <h2>不要混淆的四种生命周期</h2>
+          <p>系统门面、启动对象图、任务类型图和请求上下文分别回答调用、组合、流程与单次运行的问题。</p>
         </div>
       </div>
       <div id="key-concepts" class="concept-grid"></div>

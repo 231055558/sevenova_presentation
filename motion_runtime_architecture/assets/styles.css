@@ -336,6 +336,125 @@ main {
   margin-top: 56px;
 }
 
+.object-taxonomy {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.taxonomy-values,
+.taxonomy-motion {
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+}
+
+.taxonomy-values {
+  padding: 22px;
+  border-top: 4px solid var(--olive);
+}
+
+.taxonomy-values > span,
+.taxonomy-motion header span,
+.taxonomy-motion footer span {
+  color: var(--clay);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.taxonomy-values h3,
+.taxonomy-motion h3 {
+  margin: 6px 0 2px;
+  font-size: 1.35rem;
+}
+
+.taxonomy-values p,
+.taxonomy-motion p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.taxonomy-values div {
+  display: grid;
+  gap: 0;
+  margin-top: 20px;
+}
+
+.taxonomy-values b {
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  color: var(--brown);
+  font-size: 0.72rem;
+}
+
+.taxonomy-motion {
+  border-top: 4px solid var(--vandyke);
+}
+
+.taxonomy-motion > header,
+.taxonomy-motion > footer {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.32fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 16px 18px;
+}
+
+.taxonomy-motion > header {
+  background: var(--paper-warm);
+}
+
+.taxonomy-families {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.taxonomy-families article {
+  min-width: 0;
+  padding: 15px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.taxonomy-families article:nth-child(4n) {
+  border-right: 0;
+}
+
+.taxonomy-families article:nth-child(n + 5) {
+  border-bottom: 0;
+}
+
+.taxonomy-families span,
+.taxonomy-families strong,
+.taxonomy-families small {
+  display: block;
+}
+
+.taxonomy-families span {
+  color: var(--clay);
+  font: 800 0.62rem/1 "SFMono-Regular", Consolas, monospace;
+}
+
+.taxonomy-families strong {
+  margin-top: 12px;
+  color: var(--vandyke);
+  font-size: 0.78rem;
+}
+
+.taxonomy-families small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  overflow-wrap: anywhere;
+}
+
+.taxonomy-motion > footer {
+  border-left: 5px solid var(--olive);
+  background: #e9ede4;
+}
+
 .architecture-figure {
   margin: 0;
   border: 1px solid var(--line-strong);
@@ -1929,7 +2048,7 @@ main {
 .family-grid,
 .multi-axis-grid,
 .double-grid,
-.package-grid {
+.layout-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 15px;
@@ -1981,7 +2100,7 @@ main {
 .communication-card p,
 .snapshot-card p,
 .family-card p,
-.package-card p {
+.layout-card p {
   color: var(--muted);
 }
 
@@ -2730,7 +2849,7 @@ main {
   color: var(--muted);
 }
 
-.package-card {
+.layout-card {
   min-height: 260px;
 }
 
@@ -2845,7 +2964,7 @@ main {
   .family-grid,
   .multi-axis-grid,
   .double-grid,
-  .package-grid,
+  .layout-grid,
   .pipeline {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2942,6 +3061,30 @@ main {
 
   .runtime-main-flow {
     grid-template-columns: 1fr;
+  }
+
+  .object-taxonomy {
+    grid-template-columns: 1fr;
+  }
+
+  .taxonomy-families {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .taxonomy-families article:nth-child(4n) {
+    border-right: 1px solid var(--line);
+  }
+
+  .taxonomy-families article:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .taxonomy-families article:nth-child(n + 5) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .taxonomy-families article:nth-child(n + 7) {
+    border-bottom: 0;
   }
 
   .runtime-module {
@@ -3163,6 +3306,12 @@ main {
     grid-template-columns: 1fr;
   }
 
+  .taxonomy-motion > header,
+  .taxonomy-motion > footer {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
   .runtime-boundary-title {
     flex-direction: column;
   }
@@ -3348,6 +3497,7 @@ main {
 
   .diagram-subheading {
     align-items: flex-start;
+    flex-direction: column;
   }
 
   .diagram-caption {
@@ -3362,7 +3512,7 @@ main {
   .family-grid,
   .multi-axis-grid,
   .double-grid,
-  .package-grid,
+  .layout-grid,
   .pipeline,
   .numbered-flow,
   .migration-grid,

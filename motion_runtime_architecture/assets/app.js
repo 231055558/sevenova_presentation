@@ -108,12 +108,12 @@
     const root = $("page-links");
     if (!root) return;
     const descriptions = {
-      flows: "从进程 CREATED 到 READY，再看一项 MotionJob 如何通过 mailbox 和 Operation 完成。",
-      modules: "逐个查看主要模块的责任、接口、不变量、错误、技术和测试面。",
+      flows: "从 SystemConfig 构建并冻结 ObjectGraph，再看 TaskGraph 如何驱动一次 MotionJob。",
+      modules: "逐个查看主要对象、家族接口、依赖绑定、不变量、错误和测试面。",
       execution: "明确速度字段、轨迹拼接、时间参数化、主站实时插值和多轴协同。",
-      runtime: "比较真机、数字孪生、Fake 与 Replay Runtime Pack 的注册和等价合同。",
+      runtime: "比较真机、数字孪生、Fake 与 Replay 运行对象的绑定和等价合同。",
       testing: "列出无 ROS、孪生、ROS 集成、主站 SIL 和 HIL，以及所有应模拟故障。",
-      technology: "查看 C++/Python/ROS/MoveIt 技术选择、目标 package 和迁移顺序。"
+      technology: "查看 C++/Python/ROS/MoveIt 的对象边界、单程序目录和迁移顺序。"
     };
     root.innerHTML = DATA.nav.filter(([, , id]) => id !== "overview").map(([href, label, id], index) => `
       <a class="card link-card reveal" style="--delay:${index * 45}ms" href="${escapeHtml(href)}">
@@ -265,7 +265,7 @@
         <span class="eyebrow">${escapeHtml(item.registry)}</span>
         <h3>${escapeHtml(item.family)}</h3>
         <h4>准确 Interface</h4>${chips(item.interfaces)}
-        <h4>可能 Adapter</h4>${chips(item.adapters)}
+        <h4>可能实现</h4>${chips(item.adapters)}
         <h4>启动兼容检查</h4><p>${escapeHtml(item.compatibility)}</p>
       </article>
     `).join("");
@@ -335,16 +335,16 @@
     `).join("");
   }
 
-  function renderRuntimePacks() {
+  function renderRuntimeOptions() {
     const root = $("runtime-packs");
     if (!root) return;
-    root.innerHTML = DATA.runtimePacks.map((item) => `
+    root.innerHTML = DATA.runtimeOptions.map((item) => `
       <article class="runtime-pack ${escapeHtml(item.id)}">
         <div class="card-heading">
           <div><span class="eyebrow">${escapeHtml(item.backend)}</span><h3>${escapeHtml(item.name)}</h3></div>
           ${badge(item.status, item.id === "real" ? "ready" : "muted")}
         </div>
-        <h4>注册</h4>${chips(item.registers)}
+        <h4>提供对象</h4>${chips(item.registers)}
         <h4>保证</h4>${list(item.guarantees)}
         <h4>禁止泄漏</h4>${list(item.mustNot)}
       </article>
@@ -424,12 +424,12 @@
     `).join("");
   }
 
-  function renderTargetPackages() {
-    const root = $("target-packages");
+  function renderTargetLayout() {
+    const root = $("target-layout");
     if (!root) return;
-    root.innerHTML = DATA.targetPackages.map((item) => `
-      <article class="card package-card">
-        <div class="card-heading"><h3>${escapeHtml(item.name)}</h3>${badge(item.status, item.status.includes("新增") ? "planned" : "muted")}</div>
+    root.innerHTML = DATA.targetLayout.map((item) => `
+      <article class="card layout-card">
+        <div class="card-heading"><h3>${escapeHtml(item.name)}</h3>${badge(item.status, "muted")}</div>
         ${chips(item.contents)}
         <p><strong>依赖：</strong>${escapeHtml(item.dependencies)}</p>
         <p>${escapeHtml(item.note)}</p>
@@ -485,7 +485,7 @@
   renderMultiAxis();
   renderExecutionModes();
 
-  renderRuntimePacks();
+  renderRuntimeOptions();
   renderTwinModules();
   renderTable("runtime-parity", DATA.runtimeParity, ["合同项", "真机与孪生共同要求"]);
   renderCodeBlock();
@@ -496,7 +496,7 @@
   renderAcceptanceSlices();
 
   renderStackLayers();
-  renderTargetPackages();
+  renderTargetLayout();
   renderPairList("dependency-rules", DATA.dependencyRules);
   renderConfigFiles();
   renderMigration();
