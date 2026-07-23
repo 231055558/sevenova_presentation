@@ -17,13 +17,13 @@
   <main>
     <section class="page-hero">
       <div class="page-hero-copy">
-        <span class="kicker">生命周期 · 任务邮箱 · 快照 · 并发</span>
-        <h2>启动是构建系统，任务是使用系统。</h2>
-        <p>所有注册、流程编译、依赖绑定和健康检查必须发生在入口开放之前。任务内状态串行，耗时操作才并发。</p>
+        <span class="kicker">ObjectGraph · TaskGraph · JobContext · 有界并发</span>
+        <h2>启动把配置变成对象系统，任务只使用冻结对象。</h2>
+        <p>工厂发现、对象构造、typed dependency、任务图编译和健康检查都发生在入口开放前。任务状态串行，耗时 Operation 才并发。</p>
       </div>
       <aside class="hero-aside">
         <strong>核心不变量</strong>
-        <p>未就绪不接任务；运行中不查注册表切换算法；同一任务只有任务邮箱消费者能修改状态。</p>
+        <p>未就绪不接任务；运行中不查 ObjectCatalog 或切换对象；同一任务只有 mailbox 消费者能修改状态。</p>
       </aside>
     </section>
 
@@ -34,7 +34,7 @@
           <h2>启动负责构建，任务负责使用</h2>
           <p>左侧生命周期每进程只发生一次；通过 READY 门后，右侧生命周期才可为每个请求独立运行。</p>
         </div>
-        <span class="diagram-scope">唯一交接物：冻结的运行时依赖图</span>
+        <span class="diagram-scope">唯一交接物：冻结 ObjectGraph + 已编译 TaskGraph</span>
       </div>
       <figure class="architecture-figure">
         <div class="diagram-layout lifecycle-layout">
@@ -42,10 +42,10 @@
             <section class="lifecycle-lane startup-lane">
               <header><span>每个进程一次</span><h3>应用启动</h3><p>把配置和实现组合成可运行系统</p></header>
               <ol>
-                <li><span>01</span><div><strong>选择运行组合</strong><small>机器人配置、任务包、算法包、运行环境</small></div></li>
-                <li><span>02</span><div><strong>注册并冻结</strong><small>类型化工厂完成去重、版本与能力检查</small></div></li>
-                <li><span>03</span><div><strong>编译与绑定</strong><small>流程配置变成不可变流程，角色绑定具体实例</small></div></li>
-                <li><span>04</span><div><strong>验证并预热</strong><small>合同、资源、健康、状态新鲜度全部通过</small></div></li>
+                <li><span>01</span><div><strong>读取系统配置</strong><small>机器人定义源、对象、任务、通信与预算</small></div></li>
+                <li><span>02</span><div><strong>发现并创建对象</strong><small>ObjectCatalog 工厂 → MotionObject 实例</small></div></li>
+                <li><span>03</span><div><strong>注入依赖并编译</strong><small>冻结 ObjectGraph，编译类型化 TaskGraph</small></div></li>
+                <li><span>04</span><div><strong>启动并预热</strong><small>按拓扑启动 ActiveObject，合同与健康全部通过</small></div></li>
               </ol>
               <div class="failure-exit"><strong>任一步失败</strong><span>入口保持关闭，输出结构化启动错误</span></div>
             </section>
@@ -53,16 +53,16 @@
             <div class="ready-handoff" aria-label="READY 门">
               <span>唯一交接门</span>
               <strong>READY</strong>
-              <small>冻结运行时依赖图<br>最后开放任务入口</small>
+              <small>ObjectGraph + TaskGraph<br>最后开放 Communication</small>
               <i aria-hidden="true"></i>
             </div>
 
             <section class="lifecycle-lane job-lane">
               <header><span>每个请求一次</span><h3>单次任务</h3><p>只使用已经冻结的系统能力</p></header>
               <ol>
-                <li><span>01</span><div><strong>准入并建立任务</strong><small>检查幂等、期限和资源，创建任务邮箱</small></div></li>
+                <li><span>01</span><div><strong>准入并建 JobContext</strong><small>固定图版本、幂等、期限、资源和任务邮箱</small></div></li>
                 <li><span>02</span><div><strong>固定阶段事实</strong><small>获取机器人、场景、工具和标定快照</small></div></li>
-                <li><span>03</span><div><strong>决策与有界调度</strong><small>状态串行变化，耗时操作按预算并发</small></div></li>
+                <li><span>03</span><div><strong>推进 TaskGraph</strong><small>状态串行变化，对象调用按预算并发</small></div></li>
                 <li><span>04</span><div><strong>结果回到任务邮箱</strong><small>成功、失败和取消都沿可靠入口回流</small></div></li>
                 <li><span>05</span><div><strong>形成可审计终态</strong><small>确认最终状态、释放资源、保存事件链</small></div></li>
               </ol>
@@ -92,7 +92,7 @@
 
     <section class="section">
       <div class="section-heading">
-        <div><span class="kicker">启动时序</span><h2>完整启动流程</h2><p>注册表在构图前开放，构图后冻结；运行时包和任务包都在同一启动模型里安装。</p></div>
+        <div><span class="kicker">启动时序</span><h2>完整启动流程</h2><p>ObjectCatalog 在构图前开放；ObjectGraph 与 TaskGraph 冻结后，目录不再参与任务运行。</p></div>
       </div>
       <div id="startup-timeline" class="timeline"></div>
     </section>

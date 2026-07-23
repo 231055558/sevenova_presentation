@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>局部模块 · robot_motion_control</title>
+  <title>对象与接口 · robot_motion_control</title>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body data-page="modules">
@@ -17,22 +17,61 @@
   <main>
     <section class="page-hero">
       <div class="page-hero-copy">
-        <span class="kicker">模块接口 · 不变量 · 错误 · 测试</span>
-        <h2>每个局部都要隐藏复杂度，而不是制造更多转发层。</h2>
-        <p>展开模块可以看到它拥有的责任、接口输入输出、不变量、结构化错误、建议技术和测试面。</p>
+        <span class="kicker">对象分类 · 家族接口 · 不变量 · 错误 · 测试</span>
+        <h2>一切皆对象，不等于一切都继承同一个万能基类。</h2>
+        <p>Value Object 保存事实，MotionObject 参与组合，ActiveObject 才拥有生命周期；调用方始终依赖准确家族接口。</p>
       </div>
       <aside class="hero-aside">
-        <strong>判断是否值得独立</strong>
-        <p>删除这个模块后，复杂度是否会重新散落到多个调用者？若不会，它可能只是一个浅层转发层。</p>
+        <strong>三条继承判断</strong>
+        <p>只共享身份和校验 → MotionObject；共享输入/不变量/错误 → 家族接口；确实持有线程或连接 → ActiveObject。</p>
       </aside>
+    </section>
+
+    <section class="section object-taxonomy-section">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">T1 · 类型分类</span>
+          <h2>先分对象性质，再谈继承关系</h2>
+          <p>数据对象不进入生命周期树；运动对象只共享组合元协议；只有输入、不变量和错误一致的对象才进入同一家族。</p>
+        </div>
+        <span class="diagram-scope">继承用于替换；组合用于协作</span>
+      </div>
+      <div class="object-taxonomy" role="img" aria-label="Value Object 与 MotionObject 分离，MotionObject 下按机器人定义、逆运动学、规划、轨迹、任务节点、运行环境、通信和观察形成准确家族，只有拥有长期资源的实现增加 ActiveObject 生命周期">
+        <article class="taxonomy-values">
+          <span>不进入对象生命周期树</span>
+          <h3>Value Object</h3>
+          <p>不可变事实与合同</p>
+          <div><b>RobotDefinition</b><b>RobotState</b><b>PlanningScene</b><b>TaskRequest / Result</b><b>JointTrajectory</b><b>MotionError / Snapshot</b></div>
+        </article>
+        <section class="taxonomy-motion">
+          <header>
+            <div><span>统一元协议</span><h3>MotionObject</h3></div>
+            <p>descriptor · dependencies · validate</p>
+          </header>
+          <div class="taxonomy-families">
+            <article><span>01</span><strong>机器人定义源</strong><small>RobotDefinitionSource</small></article>
+            <article><span>02</span><strong>逆运动学</strong><small>IKSolver</small></article>
+            <article><span>03</span><strong>运动规划</strong><small>MotionPlanner</small></article>
+            <article><span>04</span><strong>轨迹处理</strong><small>TrajectoryProcessor</small></article>
+            <article><span>05</span><strong>任务节点</strong><small>TaskNode / Guard</small></article>
+            <article><span>06</span><strong>运行环境</strong><small>RobotRuntime</small></article>
+            <article><span>07</span><strong>边界通信</strong><small>Communication</small></article>
+            <article><span>08</span><strong>旁路观察</strong><small>Observer</small></article>
+          </div>
+          <footer>
+            <div><span>按需增加生命周期</span><h3>ActiveObject</h3></div>
+            <p>仅线程、连接、设备句柄或长期异步资源：start · stop · health</p>
+          </footer>
+        </section>
+      </div>
     </section>
 
     <section class="section structure-section">
       <div class="section-heading">
         <div>
-          <span class="kicker">L2 · 运行时容器</span>
-          <h2>一次任务由哪些责任域协作完成</h2>
-          <p>本图展开运控运行时内部，只展示稳定责任和主方向。类继承、注册表结构与技术依赖在模块清单中单独说明。</p>
+          <span class="kicker">L2 · 双图对象系统</span>
+          <h2>ObjectGraph 提供对象，TaskGraph 决定次序</h2>
+          <p>上方组合只在启动发生；中间主路径每个 Job 运行一次。任务节点只拿 typed handle，不按字符串查全局注册表。</p>
         </div>
         <span class="diagram-scope">面向：架构设计与实现人员</span>
       </div>
@@ -41,73 +80,73 @@
           <div class="container-map" role="img" aria-label="运控运行时的应用组合、任务管理、决策引擎、能力调度、轨迹管线、执行监督和观察出口">
             <aside class="container-external external-inputs">
               <span class="boundary-label">外部输入</span>
-              <article><strong>任务入口</strong><p>任务意图与参数</p><span>01</span></article>
-              <article><strong>事实源</strong><p>机器人 / 场景 / 标定</p><span>02</span></article>
+              <article><strong>系统配置 / 资源</strong><p>对象选择、绑定、URDF 与标定</p><span>01</span></article>
+              <article><strong>请求 / 世界证据</strong><p>任务意图、机器人状态与场景</p><span>02</span></article>
             </aside>
 
             <section class="runtime-boundary">
               <header class="runtime-boundary-title">
-                <div><span>系统边界</span><h3>运控运行时</h3></div>
+                <div><span>统一程序门面</span><h3>MotionSystem</h3></div>
                 <code>robot_motion_control</code>
               </header>
 
               <article class="runtime-strip composition-strip">
-                <div><span class="module-index">启动期</span><h4>应用组合</h4></div>
-                <p>加载清单、注册实现、验证兼容性，冻结本进程依赖图。</p>
-                <code>Composition Root</code>
+                <div><span class="module-index">启动期</span><h4>构建 ObjectGraph</h4></div>
+                <p>ObjectCatalog 发现工厂，SystemBuilder 创建对象、注入依赖并冻结 typed handle。</p>
+                <code>SystemConfig → ObjectGraph</code>
               </article>
 
               <div class="runtime-main-flow">
                 <article class="runtime-module">
-                  <span class="module-index">01</span><h4>任务管理</h4>
-                  <p>建立任务上下文，固定事实快照，管理取消与结果。</p>
-                  <code>Job Manager</code>
+                  <span class="module-index">01</span><h4>任务定义</h4>
+                  <p>已编译的节点、typed port、分支、重试、资源与 join。</p>
+                  <code>TaskGraph</code>
                 </article>
                 <i class="flow-arrow" aria-hidden="true"></i>
                 <article class="runtime-module featured-module">
-                  <span class="module-index">02</span><h4>决策引擎</h4>
-                  <p>解释任务流程，选择下一项操作，不直接依赖外部框架。</p>
-                  <code>Motion Engine</code>
+                  <span class="module-index">02</span><h4>请求上下文</h4>
+                  <p>固定图版本、快照、资源租约、取消、期限与事件关联。</p>
+                  <code>JobContext</code>
                 </article>
                 <i class="flow-arrow" aria-hidden="true"></i>
                 <article class="runtime-module">
-                  <span class="module-index">03</span><h4>能力调度</h4>
-                  <p>按能力要求绑定 IK、规划与轨迹实现，执行有界并发。</p>
-                  <code>Capability Scheduler</code>
+                  <span class="module-index">03</span><h4>决策引擎</h4>
+                  <p>推进 TaskGraph，产生 Command，不直接依赖外部框架。</p>
+                  <code>MotionEngine</code>
                 </article>
                 <i class="flow-arrow" aria-hidden="true"></i>
                 <article class="runtime-module">
-                  <span class="module-index">04</span><h4>轨迹管线</h4>
-                  <p>拼接、平滑、时间参数化并验证可执行合同。</p>
-                  <code>Trajectory Pipeline</code>
+                  <span class="module-index">04</span><h4>对象调用</h4>
+                  <p>typed handle、有界调度、错误归一化、计时与取消。</p>
+                  <code>ObjectInvoker</code>
                 </article>
                 <i class="flow-arrow" aria-hidden="true"></i>
                 <article class="runtime-module">
-                  <span class="module-index">05</span><h4>执行监督</h4>
-                  <p>提交轨迹、跟踪状态，收敛完成、取消与故障。</p>
-                  <code>Execution Supervisor</code>
+                  <span class="module-index">05</span><h4>运行环境</h4>
+                  <p>算法对象、轨迹管线与执行监督调用真机、孪生或 Fake。</p>
+                  <code>Motion Objects</code>
                 </article>
               </div>
 
               <article class="runtime-strip observation-strip">
-                <div><span class="module-index">旁路</span><h4>观察出口</h4></div>
-                <p>统一发布结构化事件、日志、指标和可回放记录，不反向控制业务。</p>
-                <code>Event + Telemetry</code>
+                <div><span class="module-index">横切</span><h4>Guard / Observer / Lifecycle</h4></div>
+                <p>Guard 是显式 TaskNode；Observer 只读旁路；LifecycleListener 只观察对象健康。</p>
+                <code>明确权限，不做万能 Hook</code>
               </article>
             </section>
 
             <aside class="container-external external-outputs">
-              <span class="boundary-label">可替换实现</span>
-              <article><strong>运行时包</strong><p>真机 / 孪生 / 仿真 / 测试</p><span>03</span></article>
-              <article><strong>观察工具</strong><p>日志 / 指标 / 可视化 / 回放</p><span>04</span></article>
+              <span class="boundary-label">外部依赖实现</span>
+              <article><strong>运行 / 算法 Backend</strong><p>MoveIt / 真机 / 孪生 / 测试</p><span>03</span></article>
+              <article><strong>通信 / 观察 Backend</strong><p>Direct / ROS2 / 日志 / 可视化</p><span>04</span></article>
             </aside>
           </div>
 
           <div class="container-reading-key">
             <strong>主路径</strong>
-            <span>任务管理 → 决策引擎 → 能力调度 → 轨迹管线 → 执行监督</span>
+            <span>TaskGraph → JobContext → MotionEngine → ObjectInvoker → MotionObject</span>
             <strong>两条横切规则</strong>
-            <span>应用组合只发生在启动期；观察出口只旁路复制事实。</span>
+            <span>ObjectGraph 只在启动构建；Guard/Observer/Lifecycle 权限明确分离。</span>
           </div>
         </div>
         <figcaption class="diagram-caption">
@@ -121,7 +160,7 @@
 
     <section class="section">
       <div class="section-heading">
-        <div><span class="kicker">架构清单</span><h2>主要模块</h2><p>这里只列需要形成稳定责任和测试面的模块，不要求一类一文件或一类一软件包。</p></div>
+        <div><span class="kicker">对象清单</span><h2>主要对象与深层模块</h2><p>这里只列需要形成稳定责任和测试面的对象，不要求一类一文件，更不要求一类一软件包。</p></div>
         <span id="module-count" class="badge muted"></span>
       </div>
       <div class="module-toolbar">
@@ -133,7 +172,7 @@
 
     <section class="section">
       <div class="section-heading">
-        <div><span class="kicker">类型化能力家族</span><h2>按能力家族注册</h2><p>父类可共享元数据，但实际调用使用准确接口。只有真正变化的地方才形成可替换边界。</p></div>
+        <div><span class="kicker">类型化对象家族</span><h2>共同元协议，准确调用接口</h2><p>家族实现可继承 MotionObject 的元信息，但调用使用准确接口。ObjectCatalog 只负责发现，ObjectGraph 才负责本次绑定。</p></div>
       </div>
       <div id="interface-families" class="family-grid"></div>
     </section>

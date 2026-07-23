@@ -28,7 +28,7 @@
       <aside>
         <span>当前收录</span>
         <strong>2 个主题</strong>
-        <small>更新于 2026-07-22</small>
+        <small>更新于 2026-07-23</small>
       </aside>
     </section>
 
@@ -44,23 +44,23 @@
       <div class="presentation-list">
         <article class="presentation featured">
           <div class="presentation-copy">
-            <div class="meta-row"><span>目标架构</span><time datetime="2026-07-22">2026-07-22</time></div>
-            <h3>运控运行时架构</h3>
-            <p>从启动组合、任务编排和算法能力，一直展开到定时轨迹、真机与数字孪生、测试阶梯及迁移门禁。</p>
+            <div class="meta-row"><span>目标架构 v1</span><time datetime="2026-07-23">2026-07-23</time></div>
+            <h3>运控对象系统架构</h3>
+            <p>以一个 MotionSystem 统一启动与调用，用 ObjectGraph 固定对象组合、TaskGraph 表达任务流程，并完整展开执行、通信、孪生和测试边界。</p>
             <ul>
-              <li>7 个分层架构视图</li>
-              <li>中文优先的责任边界</li>
-              <li>桌面与移动端自适应</li>
+              <li>MotionSystem / ObjectGraph / TaskGraph</li>
+              <li>Direct / ROS2 通信可切换</li>
+              <li>单程序目录与对象家族</li>
             </ul>
             <a href="motion_runtime_architecture/">打开架构门户 <span aria-hidden="true">→</span></a>
           </div>
           <div class="architecture-preview" aria-hidden="true">
-            <div class="preview-label">系统上下文 / L1</div>
+            <div class="preview-label">对象组合 / L2</div>
             <div class="preview-flow">
-              <span>任务请求</span><i></i><strong>运控运行时</strong><i></i><span>真机 / 孪生</span>
+              <span>SystemConfig</span><i></i><strong>MotionSystem</strong><i></i><span>JobContext</span>
             </div>
-            <div class="preview-rail">机器人事实 · 场景 · 标定</div>
-            <div class="preview-rail observer">事件 · 遥测 · 回放</div>
+            <div class="preview-rail">ObjectGraph · TaskGraph · typed dependency</div>
+            <div class="preview-rail observer">Direct / ROS2 · 真机 / 孪生 · 观察 / 回放</div>
           </div>
         </article>
 

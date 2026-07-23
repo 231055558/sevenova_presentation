@@ -17,9 +17,9 @@
   <main>
     <section class="page-hero">
       <div class="page-hero-copy">
-        <span class="kicker">运行时包 · 真机 · 孪生 · 测试 · 回放</span>
-        <h2>任务只认识运行能力，不认识“现在是不是仿真”。</h2>
-        <p>真机、数字孪生、确定性测试和记录回放在启动时注册同族接口。运行时依赖图选择一个组合，决策引擎不写模式分支。</p>
+        <span class="kicker">RobotRuntime 对象 · 真机 · 孪生 · 测试 · 回放</span>
+        <h2>任务只认识运行对象合同，不认识“现在是不是仿真”。</h2>
+        <p>真机、数字孪生、确定性测试和记录回放实现同族准确接口。ObjectGraph 绑定所选对象，决策引擎不写模式分支。</p>
       </div>
       <aside class="hero-aside">
         <strong>数字孪生的身份</strong>
@@ -32,7 +32,7 @@
         <div>
           <span class="kicker">L3 · 运行环境插槽</span>
           <h2>一个稳定合同，四种可替换实现</h2>
-          <p>运控核心只依赖稳定接口；启动时从真机、数字孪生、确定性测试和记录回放中选择一种运行组合。</p>
+          <p>运控核心只依赖稳定对象接口；启动时从真机、数字孪生、确定性测试和记录回放中选择对象组合。</p>
         </div>
         <span class="diagram-scope">绑定时机：启动构图阶段，仅一次</span>
       </div>
@@ -83,7 +83,7 @@
 
     <section class="section">
       <div class="section-heading">
-        <div><span class="kicker">实现选项</span><h2>四种运行时包</h2><p>同一任务包可以绑定不同运行时包；每一种只对自己能够提供的证据负责。</p></div>
+        <div><span class="kicker">实现选项</span><h2>四种 RobotRuntime 对象组合</h2><p>同一 TaskGraph 可以绑定不同 RobotRuntime；每种实现只对自己能够提供的证据负责。</p></div>
       </div>
       <div id="runtime-packs" class="runtime-pack-grid"></div>
     </section>
@@ -104,18 +104,18 @@
 
     <section class="section">
       <div class="section-heading">
-        <div><span class="kicker">绑定示例</span><h2>启动配置如何同时选择算法和孪生</h2><p>注册允许多种实现同时存在；绑定配置明确每个规划器的 IK 依赖和任务运行环境。</p></div>
+        <div><span class="kicker">ObjectGraph 配置示例</span><h2>同一启动如何选择通信、双 IK 和孪生</h2><p>ObjectCatalog 允许多种实现同时存在；SystemConfig 明确每个 planner 的 IK typed dependency、任务角色与 RobotRuntime。</p></div>
       </div>
       <div class="code-panel"><pre><code id="manifest-code"></code></pre></div>
     </section>
 
     <div class="callout section">
       <strong>当前迁移策略：</strong>
-      现有 Python `robot_motion_digital_twin` 可以先通过适配器接入；随后优先对齐速度字段、插值配置、反馈与故障语义。
+      现有 Python `robot_motion_digital_twin` 可以先作为 DigitalTwinRuntime backend 接入；随后优先对齐速度字段、插值配置、反馈与故障语义。
       是否引入动力学引擎是第二阶段问题，不应阻塞运行合同规范化。
     </div>
 
-    <p class="footer-note">运行时包是启动组合，不是要求把所有适配器写在同一个大类中。</p>
+    <p class="footer-note">RobotRuntime 是准确接口对象的组合，可共享同一个 backend；不需要 RuntimePack 顶层概念或一个巨大类。</p>
   </main>
 
   <script src="assets/data.js"></script>
