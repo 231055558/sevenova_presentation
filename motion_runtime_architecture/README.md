@@ -10,7 +10,8 @@
 目标不再是一组新的 ROS2 package，而是一个由 `MotionSystem` 管理的对象系统：
 
 1. `ObjectCatalog` 发现可用实现，`SystemBuilder` 在启动期构建并冻结 `ObjectGraph`。
-2. `TaskDefinition` 的配置被编译为 `TaskGraph`，单次请求只创建 `MotionJob / JobContext`。
+2. `TaskDefinition` 由可复用 `TaskStage/TaskFragment` 组合并展开为扁平 `TaskGraph`；单次请求创建
+   `JobContext + TaskExecution`，准确中间值留在该 Job，Stage 不等于原子执行单元。
 3. IK、规划、轨迹、执行、通信和观察各自形成准确对象家族，不共享巨大算法基类。
 4. ROS 是 `Communication` 的一种实现，MoveIt 是算法对象的实现依赖，EtherCAT 与孪生是
    `RobotRuntime` 的实现。
@@ -33,14 +34,18 @@
 
 ## 状态说明
 
-这是目标架构 `v1`，不是当前实现清单。具体 IK、抽离、负重等数学算法不在本门户冻结；它们通过各自
-家族接口、输入不变量和错误模式接入。所有类名仍需由第一条无 ROS 纵向切片验证后再冻结。
+目标架构 `v1` 已完成 M1 全 Fake 纵向骨架：PR #26 在纯 CMake 核心中跑通配置、启动、任务、Gate、
+执行与审计闭环。它仍不是“真实算法已经迁完”的清单；具体 IK、抽离、负重等数学算法通过各自家族
+Interface、输入不变量和错误模式逐件接入。S1.7 的 D-018 内核合同等待用户最终冻结确认；其他候选
+Interface 必须经过对应真实 Adapter 验证并按里程碑分阶段冻结。
 
 ## 维护约定
 
 - 结构化内容集中在 `assets/data.js`，渲染逻辑在 `assets/app.js`，样式在 `assets/styles.css`。
 - 页面主视图采用语义化 HTML 与 CSS 手工控制布局；`diagrams/` 只保留历史材料，不作为 v1 事实源。
 - 已确认决策同步记录在 [`DECISIONS.md`](DECISIONS.md)。
+- Task、Stage、候选传播和执行单元分工记录在 [`TASK_COMPOSITION.md`](TASK_COMPOSITION.md)。
+- 领域值对象的语义、扩展条件和文件定位记录在 [`DOMAIN_MODEL.md`](DOMAIN_MODEL.md)。
 - 外部架构参照、吸收点和明确不照搬的部分记录在 [`REFERENCES.md`](REFERENCES.md)。
 - 若责任变化，应同时更新页面、数据和决策记录，避免图文漂移。
 

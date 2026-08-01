@@ -52,7 +52,7 @@
             <article><span>01</span><strong>机器人定义源</strong><small>RobotDefinitionSource</small></article>
             <article><span>02</span><strong>逆运动学</strong><small>IKSolver</small></article>
             <article><span>03</span><strong>运动规划</strong><small>MotionPlanner</small></article>
-            <article><span>04</span><strong>轨迹处理</strong><small>TrajectoryProcessor</small></article>
+            <article><span>04</span><strong>轨迹三职责</strong><small>Composer · Time · Validator</small></article>
             <article><span>05</span><strong>任务节点</strong><small>TaskNode / Guard</small></article>
             <article><span>06</span><strong>运行环境</strong><small>RobotRuntime</small></article>
             <article><span>07</span><strong>边界通信</strong><small>Communication</small></article>
@@ -99,8 +99,8 @@
               <div class="runtime-main-flow">
                 <article class="runtime-module">
                   <span class="module-index">01</span><h4>任务定义</h4>
-                  <p>已编译的节点、typed port、分支、重试、资源与 join。</p>
-                  <code>TaskGraph</code>
+                  <p>Task 组合可复用 Stage/Fragment，再展开 typed port、节点、分支与重试。</p>
+                  <code>TaskStage → flat TaskGraph</code>
                 </article>
                 <i class="flow-arrow" aria-hidden="true"></i>
                 <article class="runtime-module featured-module">
@@ -144,9 +144,9 @@
 
           <div class="container-reading-key">
             <strong>主路径</strong>
-            <span>TaskGraph → JobContext → MotionEngine → ObjectInvoker → MotionObject</span>
+            <span>TaskDefinition → TaskStage/Fragment → TaskGraph → JobContext → MotionEngine → ObjectInvoker</span>
             <strong>两条横切规则</strong>
-            <span>ObjectGraph 只在启动构建；Guard/Observer/Lifecycle 权限明确分离。</span>
+            <span>Stage 是语义复用层而非原子 Operation；ObjectGraph 只在启动构建。</span>
           </div>
         </div>
         <figcaption class="diagram-caption">
