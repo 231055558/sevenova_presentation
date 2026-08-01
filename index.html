@@ -28,7 +28,7 @@
       <aside>
         <span>当前收录</span>
         <strong>2 个主题</strong>
-        <small>更新于 2026-07-23</small>
+        <small>更新于 2026-08-01</small>
       </aside>
     </section>
 
@@ -44,23 +44,23 @@
       <div class="presentation-list">
         <article class="presentation featured">
           <div class="presentation-copy">
-            <div class="meta-row"><span>目标架构 v1</span><time datetime="2026-07-23">2026-07-23</time></div>
+            <div class="meta-row"><span>M1 全 Fake 纵向骨架</span><time datetime="2026-08-01">2026-08-01</time></div>
             <h3>运控对象系统架构</h3>
-            <p>以一个 MotionSystem 统一启动与调用，用 ObjectGraph 固定对象组合、TaskGraph 表达任务流程，并完整展开执行、通信、孪生和测试边界。</p>
+            <p>一个 MotionSystem 统一启动、任务和审计；M1 已跑通纯 C++ 全 Fake 纵向链，后续真实算法、孪生、ROS2 与真机按相同 Interface 逐件替换。</p>
             <ul>
-              <li>MotionSystem / ObjectGraph / TaskGraph</li>
-              <li>Direct / ROS2 通信可切换</li>
-              <li>单程序目录与对象家族</li>
+              <li>90 / 90 CTest</li>
+              <li>核心零 ROS 依赖</li>
+              <li>固定 Snapshot 与全链审计</li>
             </ul>
-            <a href="motion_runtime_architecture/">打开架构门户 <span aria-hidden="true">→</span></a>
+            <a href="motion_runtime_architecture/">打开汇报总览 <span aria-hidden="true">→</span></a>
           </div>
           <div class="architecture-preview" aria-hidden="true">
-            <div class="preview-label">对象组合 / L2</div>
+            <div class="preview-label">M1 可执行纵向链</div>
             <div class="preview-flow">
-              <span>SystemConfig</span><i></i><strong>MotionSystem</strong><i></i><span>JobContext</span>
+              <span>SystemConfig</span><i></i><strong>MotionSystem</strong><i></i><span>RobotRuntime</span>
             </div>
-            <div class="preview-rail">ObjectGraph · TaskGraph · typed dependency</div>
-            <div class="preview-rail observer">Direct / ROS2 · 真机 / 孪生 · 观察 / 回放</div>
+            <div class="preview-rail">ObjectGraph · TaskGraph · per-Job TaskExecution</div>
+            <div class="preview-rail observer">ManualClock · Event / Error / JSONL · 90 tests</div>
           </div>
         </article>
 

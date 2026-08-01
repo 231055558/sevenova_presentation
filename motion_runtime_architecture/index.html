@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="robot_motion_control 下一阶段目标运行时架构总览">
-  <title>整体架构 · robot_motion_control</title>
+  <meta name="description" content="MotionSystem 运控对象系统汇报总览：可替换、可测试、可追溯的纯 C++ 运控内核">
+  <title>MotionSystem · 运控对象系统汇报</title>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body data-page="overview">
+<body data-page="overview" class="briefing-page">
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -19,158 +19,174 @@
   </header>
 
   <main>
-    <section class="hero">
+    <section class="hero briefing-hero">
       <div class="hero-copy">
-        <span class="kicker">目标架构 v1 · 统一对象系统</span>
-        <h2>一个 MotionSystem，启动构建对象图，任务只运行任务图。</h2>
+        <span class="kicker">M1 纵向骨架 · 汇报总览</span>
+        <h2>把运控从 ROS 服务链，收敛为一个可替换、可测试、可追溯的 MotionSystem。</h2>
         <p>
-          目标不是再造一批 ROS 包，而是形成一个可直接调用、可接 ROS、可组合算法、可替换真机与数字孪生、
-          能审计完整执行过程的运控程序。URDF、MoveIt、ROS 和孪生都在对象系统中拥有明确位置。
+          任务流程、算法选择和运行环境在启动时完成类型安全组合；任务运行只解释冻结图、调用准确对象，
+          同一套核心可以逐步接入真实算法、数字孪生、ROS2 与 EtherCAT 主站。
         </p>
         <div class="badge-row">
-          <span class="badge ready">启动失败即关闭入口</span>
-          <span class="badge typed">类型安全对象图</span>
-          <span class="badge concurrent">有界并发</span>
-          <span class="badge realtime">主站实时插值</span>
-          <span class="badge replaceable">Direct/ROS2 可切换</span>
+          <span class="badge ready">全 Fake 纵向链已合并</span>
+          <span class="badge typed">核心零 ROS 依赖</span>
+          <span class="badge replaceable">真实实现可逐件替换</span>
         </div>
       </div>
-      <aside class="hero-aside">
-        <strong>阅读这份文档时请区分</strong>
-        <p>
-          `docs/system_flow` 描述当前仓库；本门户描述目标架构 v1。ObjectGraph 是启动实例关系，
-          TaskGraph 是任务流程；C++ 目录、ROS package 和运行进程都不能代替这两个概念。
-        </p>
+      <aside class="hero-aside briefing-status">
+        <span>当前闸口</span>
+        <strong>M1 代码完成</strong>
+        <p>PR #26 已合入 main；D-018 内核合同等待负责人最终冻结确认，候选算法与执行 Interface 继续演进。</p>
       </aside>
     </section>
 
-    <section class="section structure-section">
-      <div class="section-heading">
-        <div>
-          <span class="kicker">L1 · 系统上下文</span>
-          <h2>运控运行时处在什么位置</h2>
-          <p>本图只回答系统边界和外部协作对象。内部模块、通信协议、技术栈和执行时序留给下一层图。</p>
-        </div>
-        <span class="diagram-scope">面向：项目成员、运控、电控、测试</span>
-      </div>
-      <figure class="architecture-figure">
-        <div class="diagram-layout context-layout">
-          <div class="context-map" role="img" aria-label="运控运行时与任务系统、机器人事实源、运行时提供者、观察与测试工具之间的系统上下文">
-            <article class="diagram-node context-node context-task">
-              <span class="node-kind">上游系统</span>
-              <h3>任务系统</h3>
-              <p>提交任务意图，接收最终结果。</p>
-            </article>
-            <div class="context-connector connector-down connector-01" aria-hidden="true"><span>01</span></div>
-
-            <article class="diagram-node context-node context-facts">
-              <span class="node-kind">资产与证据</span>
-              <h3>机器人资源 / 世界证据</h3>
-              <p>URDF、mesh、标定、场景更新与设备能力。</p>
-            </article>
-            <div class="context-connector connector-right connector-02" aria-hidden="true"><span>02</span></div>
-
-            <article class="diagram-node context-node context-core primary-node">
-              <span class="node-kind">目标系统</span>
-              <h3>MotionSystem</h3>
-              <code>robot_motion_control</code>
-              <p>把任务意图转化为可验证、可执行、可追踪的运动结果。</p>
-            </article>
-
-            <div class="context-connector connector-right connector-03" aria-hidden="true"><span>03</span></div>
-            <article class="diagram-node context-node context-provider">
-              <span class="node-kind">执行环境</span>
-              <h3>运行环境 Backend</h3>
-              <p>真机主站、数字孪生、回放或测试替身。</p>
-            </article>
-
-            <div class="context-connector connector-down connector-04" aria-hidden="true"><span>04</span></div>
-            <article class="diagram-node context-node context-observer">
-              <span class="node-kind">旁路消费者</span>
-              <h3>观察与测试工具</h3>
-              <p>日志、指标、可视化、回放与故障注入。</p>
-            </article>
-          </div>
-
-          <aside class="relationship-notes" aria-label="系统交互说明">
-            <div class="relationship-heading">
-              <span>关系说明</span>
-              <strong>只保留四条主关系</strong>
-            </div>
-            <ol>
-              <li><span>01</span><div><strong>任务请求 / 结果</strong><p>任务系统表达目标，不直接挑选底层算法或执行设备。</p></div></li>
-              <li><span>02</span><div><strong>资源与带版本证据</strong><p>Source/Resolver 构建 RobotDefinition，Snapshot 固定实时世界事实。</p></div></li>
-              <li><span>03</span><div><strong>执行合同 / 状态</strong><p>同一份领域合同可绑定真机、孪生、仿真或测试实现。</p></div></li>
-              <li><span>04</span><div><strong>事件 / 遥测</strong><p>观察者订阅事实，但不进入任务控制路径。</p></div></li>
-            </ol>
-          </aside>
-        </div>
-        <figcaption class="diagram-caption">
-          <span><i class="block-key core"></i>本图主角</span>
-          <span><i class="block-key adapter"></i>外部协作系统</span>
-          <span>阅读原则：先识别边界，再进入内部结构。</span>
-        </figcaption>
-      </figure>
+    <section class="brief-proof" aria-label="当前工程证据">
+      <article><strong>90 / 90</strong><span>独立 CMake / CTest</span></article>
+      <article><strong>0</strong><span>核心 ROS / MoveIt / EtherCAT 依赖</span></article>
+      <article><strong>1 : 1</strong><span>Job 与固定 Snapshot</span></article>
+      <article><strong>全链</strong><span>Result / Error / Event / JSONL 关联</span></article>
     </section>
 
-    <section class="section">
+    <section class="section brief-section">
       <div class="section-heading">
         <div>
-          <span class="kicker">设计原则</span>
-          <h2>六条架构主线</h2>
-          <p>这些原则决定代码依赖方向、启动顺序、并发形状、执行责任和测试方法。</p>
+          <span class="kicker">已经跑通</span>
+          <h2>一条任务主链，连接全部内核职责</h2>
+          <p>每个方框只有一种主要责任；算法输出保存在当前 Job 的强类型执行状态中，控制结果回到 MotionEngine。</p>
         </div>
+        <span class="diagram-scope">可重复 · 无 sleep · 可故障注入</span>
       </div>
-      <div id="principle-grid" class="principle-grid"></div>
+
+      <div class="brief-flow" role="img" aria-label="SystemConfig 到 Job 终态与 journal 的全 Fake 端到端链路">
+        <article>
+          <span>01 · 启动组合</span>
+          <strong>SystemConfig</strong>
+          <small>选择对象、依赖和任务定义</small>
+        </article>
+        <i aria-hidden="true"></i>
+        <article>
+          <span>02 · 冻结实例</span>
+          <strong>ObjectGraph</strong>
+          <small>typed handle，不在运行期猜能力</small>
+        </article>
+        <i aria-hidden="true"></i>
+        <article class="brief-flow-core">
+          <span>03 · 决策与驱动</span>
+          <strong>MotionSystem</strong>
+          <small>JobManager · MotionEngine · JobRunner</small>
+        </article>
+        <i aria-hidden="true"></i>
+        <article>
+          <span>04 · 准确调用</span>
+          <strong>TaskExecution</strong>
+          <small>Planner → 定时 → 校验 → Gate</small>
+        </article>
+        <i aria-hidden="true"></i>
+        <article>
+          <span>05 · 执行环境</span>
+          <strong>RobotRuntime</strong>
+          <small>Fake → Twin → Real 可替换</small>
+        </article>
+      </div>
+
+      <div class="brief-output-rail">
+        <span>定时轨迹</span>
+        <strong>positions + velocities + accelerations + time_from_start</strong>
+        <span>审计旁路</span>
+        <strong>snapshot_id + attempt + node/object/operation + Gate 裁决</strong>
+      </div>
     </section>
 
-    <section class="section">
+    <section class="section brief-section">
       <div class="section-heading">
         <div>
-          <span class="kicker">系统分层</span>
-          <h2>整体分层</h2>
-          <p>层次表达对象责任和依赖方向，不对应 ROS2 软件包。目标先收敛到一个程序目录，只有独立部署或发布有证据时才拆物理制品。</p>
+          <span class="kicker">核心优势</span>
+          <h2>架构的价值不是类更多，而是替换成本更低</h2>
         </div>
-        <p class="side-note">上层表达任务意图，下层提供能力和事实；任何外部框架都通过适配器穿过明确边界。</p>
       </div>
-      <div id="architecture-layers" class="architecture-layers"></div>
+      <div class="brief-advantages">
+        <article>
+          <span>01</span>
+          <h3>算法可换</h3>
+          <p>Planner 在构造时绑定准确 IK；解析、多种子或后续新实现可以同时注册，由配置选择，不改任务主流程。</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>环境可换</h3>
+          <p>Direct/ROS2 只改变 Communication，Fake/Twin/Real 只改变 Runtime Adapter，MotionEngine 保持不变。</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>测试可控</h3>
+          <p>ManualClock、脚本化 Fake 和固定 Snapshot 让失败、超时、取消、重试与幂等无需真机即可确定性复现。</p>
+        </article>
+        <article>
+          <span>04</span>
+          <h3>问题可追</h3>
+          <p>每次调用统一记录 Job、Snapshot、Stage、Node、Object、Operation、Attempt、Duration 和稳定错误码。</p>
+        </article>
+      </div>
     </section>
 
-    <section class="section">
+    <section class="section brief-section">
       <div class="section-heading">
         <div>
-          <span class="kicker">端到端流程</span>
-          <h2>从进程启动到任务收口</h2>
-          <p>启动阶段把配置变成冻结 ObjectGraph；任务阶段创建 JobContext，只沿已编译 TaskGraph 和 typed handle 运行。</p>
+          <span class="kicker">下一阶段代码形态</span>
+          <h2>框架内核稳定，真实能力长在外层</h2>
+          <p>物理目录迁移不会塞进本次汇报更新；新算法进入前先确定职责，之后按小 PR 逐件落位。</p>
         </div>
       </div>
-      <div id="overall-flow" class="numbered-flow"></div>
+      <div class="brief-code-shape">
+        <article class="shape-kernel">
+          <span>FRAMEWORK KERNEL</span>
+          <h3>core / runtime</h3>
+          <p>领域值、ObjectGraph、TaskGraph、MotionEngine、Job 和审计合同。</p>
+        </article>
+        <article>
+          <span>REGISTERED OBJECTS</span>
+          <h3>objects/</h3>
+          <p>IK、规划、轨迹、执行、通信、Observer 的具体 Adapter。</p>
+        </article>
+        <article>
+          <span>COMPOSITION</span>
+          <h3>tasks/ + config/</h3>
+          <p>可复用 Stage、任务流程、对象选择、参数和机器人运行合同。</p>
+        </article>
+        <article>
+          <span>ENTRY & ASSETS</span>
+          <h3>apps/ + resources/</h3>
+          <p>Direct、Twin、Replay、ROS2 入口，以及机器人和模型资产。</p>
+        </article>
+      </div>
     </section>
 
-    <section class="section">
+    <section class="section brief-section">
       <div class="section-heading">
         <div>
-          <span class="kicker">四个架构锚点</span>
-          <h2>不要混淆的四种生命周期</h2>
-          <p>系统门面、启动对象图、任务类型图和请求上下文分别回答调用、组合、流程与单次运行的问题。</p>
+          <span class="kicker">推进路线</span>
+          <h2>骨架之后，只做“拔 Fake、插真实”</h2>
         </div>
       </div>
-      <div id="key-concepts" class="concept-grid"></div>
+      <div class="brief-roadmap">
+        <article class="done"><span>M1</span><strong>全 Fake 纵向骨架</strong><small>代码已合并 · 冻结待确认</small></article>
+        <article><span>M2 ⇄ M3</span><strong>真实算法与轨迹执行</strong><small>IK / 负重 / 抽离 / 定时 / Supervisor</small></article>
+        <article><span>M4</span><strong>数字孪生</strong><small>只替换 Runtime binding</small></article>
+        <article><span>M5 → M6</span><strong>ROS2 与真机收敛</strong><small>等价测试 · SIL · 低速 canary</small></article>
+      </div>
     </section>
 
-    <section class="section">
+    <section class="section brief-section">
       <div class="section-heading">
         <div>
-          <span class="kicker">局部展开</span>
-          <h2>继续查看局部架构</h2>
-          <p>推荐先读启动与任务流，再读轨迹与执行；实现前最后看技术栈与迁移。</p>
+          <span class="kicker">技术下钻</span>
+          <h2>需要细节时，再进入专题页</h2>
         </div>
       </div>
-      <div id="page-links" class="page-link-grid"></div>
+      <div id="page-links" class="page-link-grid brief-links"></div>
     </section>
 
     <p class="footer-note">
-      结构化内容维护入口：`docs/motion_runtime_architecture/assets/data.js`；关键决策见 `DECISIONS.md`。
+      当前页面用于汇报；冻结范围与证据见 `S1_7_FREEZE_REVIEW.md`，进度事实源见 `ROADMAP.md`。
     </p>
   </main>
 

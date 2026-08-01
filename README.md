@@ -17,5 +17,7 @@ robot_motion_control/docs/motion_runtime_architecture/
 
 该目录为静态 HTML/CSS/JavaScript，可直接由 GitHub Pages 从 `main` 分支根目录发布。
 
-当前 v1 以一个 `MotionSystem`、启动期 `ObjectGraph`、任务类型 `TaskGraph` 和请求级
-`JobContext` 为核心；ROS2、MoveIt、真机、孪生与机器人资源均作为准确对象实现或资源接入。
+当前 M1 以一个 `MotionSystem`、启动期 `ObjectGraph`、任务类型 `TaskGraph`、请求级
+`JobContext + TaskExecution` 为核心，已通过纯 C++ 全 Fake dual_grasp 纵向链与 90 项 CTest。
+ROS2、MoveIt、真机、孪生与机器人资源继续作为准确 Adapter 或资源逐件接入；D-018 内核合同仍等待
+负责人最终冻结确认。

@@ -1,10 +1,10 @@
 window.MOTION_ARCH_DATA = {
   meta: {
-    title: "robot_motion_control 目标运行时架构",
-    version: "v1",
-    updated: "2026-07-23",
-    status: "对象系统设计基线",
-    note: "描述统一程序与对象图目标，不表示当前代码已经完成。算法细节不在此冻结。"
+    title: "robot_motion_control · MotionSystem",
+    version: "M1",
+    updated: "2026-08-01",
+    status: "全 Fake 纵向链已合并",
+    note: "内核冻结等待负责人确认；算法、轨迹、通信和真机 Interface 仍按证据分阶段成熟。"
   },
 
   nav: [
@@ -73,7 +73,7 @@ window.MOTION_ARCH_DATA = {
         ["ObjectCatalog", "按准确家族保存类型安全工厂"],
         ["SystemBuilder", "构造对象、注入依赖、执行兼容性与环检查"],
         ["ObjectGraph", "本次启动对象实例与 typed handle 的冻结图"],
-        ["TaskDefinitionCatalog", "任务 schema、TaskGraph 来源和资源声明"]
+        ["TaskDefinitionCatalog", "任务 schema、TaskStage 组合、TaskGraph 来源和资源声明"]
       ]
     },
     {
@@ -83,6 +83,9 @@ window.MOTION_ARCH_DATA = {
       purpose: "解释已编译 TaskGraph，管理 JobContext、快照、资源和 Operation，不直接调用外部框架。",
       items: [
         ["JobManager", "准入、幂等、查询、取消和结果"],
+        ["TaskStage / Fragment", "复用业务阶段，展开 typed port、节点和边，不承诺原子执行"],
+        ["TaskNode / Guard", "独立分支、重试、超时、取消和审计的控制步骤"],
+        ["Policy", "候选选择、重试、恢复、超时和资源策略"],
         ["MotionEngine", "TaskGraph + state + result → new state + commands"],
         ["JobContext", "冻结图引用、快照、租约、取消、deadline 和关联信息"],
         ["SnapshotManager", "版本化事实的一致快照"],
@@ -97,9 +100,7 @@ window.MOTION_ARCH_DATA = {
       items: [
         ["IKSolver", "解析、多种子、约束 IK 和确定性 Fake"],
         ["MotionPlanner", "抽离、负重、通用规划及其显式 IK 依赖"],
-        ["TrajectoryProcessor", "拼接、平滑、时间参数化与验证"],
-        ["TaskNode / Guard", "计算、动作、检查、分支和 join 节点"],
-        ["Policy", "候选选择、重试、恢复、超时和资源策略"]
+        ["轨迹三接口", "Composer 拼接/平滑；TimeParameterizer 定时；Validator 验证"]
       ]
     },
     {
@@ -135,7 +136,7 @@ window.MOTION_ARCH_DATA = {
     ["1", "读取系统配置", "SystemConfig 选择机器人定义源、对象实现、显式依赖绑定、通信环境和并发预算。"],
     ["2", "发现对象工厂", "ObjectCatalog 按家族安装类型安全工厂；注册只说明系统能创建什么。"],
     ["3", "构建对象图", "SystemBuilder 创建实例并注入依赖，例如两个 planner 分别绑定两个 IK 对象。"],
-    ["4", "编译任务图", "声明式任务配置经 schema、类型、资源、分支和退出条件检查，生成 TaskGraph。"],
+    ["4", "编译任务图", "TaskDefinition 组合可复用 Stage/Fragment，经 typed port、角色、分支和退出检查展开为扁平 TaskGraph。"],
     ["5", "验证并启动", "冻结 ObjectGraph，按拓扑顺序启动 ActiveObject；健康、合同和预热通过后进入 READY。"],
     ["6", "任务准入", "JobManager 校验请求、幂等键、系统状态和资源，创建 MotionJob。"],
     ["7", "建立 JobContext", "固定 ObjectGraph/TaskGraph 版本，并捕获机器人、场景、工具和标定快照。"],
@@ -160,9 +161,15 @@ window.MOTION_ARCH_DATA = {
       lifetime: "启动级"
     },
     {
+      name: "TaskStage / TaskFragment",
+      question: "任务怎样在完整流程和小节点之间复用？",
+      answer: "Stage 表达可复用业务阶段，Fragment 提供 typed port、节点和边；构建后展开为扁平 TaskGraph，Stage 不等于一次 Operation。",
+      lifetime: "任务定义/构建期"
+    },
+    {
       name: "TaskGraph",
       question: "一种任务怎样运行？",
-      answer: "把配置编译为类型化节点、分支、重试和 join；节点只引用 ObjectGraph 中已绑定的命名角色。",
+      answer: "把 Stage/Fragment 展开为类型化节点、分支和重试；节点只引用 ObjectGraph 中已绑定的命名角色。",
       lifetime: "任务类型级"
     },
     {
@@ -321,14 +328,28 @@ window.MOTION_ARCH_DATA = {
       name: "TaskDefinition",
       group: "startup",
       lifetime: "Task type",
-      purpose: "一种任务类型的静态定义，声明 TaskGraph、命名对象角色、策略、资源和请求/结果类型。",
-      inputs: ["TaskDefinitionBuilder", "Task YAML"],
-      outputs: ["TaskGraph source", "RoleSpec", "Task schema"],
-      owns: ["任务语义", "不拥有算法实例或 Job 状态"],
-      invariants: ["任务角色引用 ObjectGraph 命名对象", "定义期不启动线程", "配置节点不可直接调用硬件"],
+      purpose: "一种完整业务任务的静态定义，通过可复用 TaskStage 组织 TaskGraph、角色、策略、资源和请求/结果类型。",
+      inputs: ["TaskDefinitionBuilder", "TaskStage/Fragment", "后续 Task YAML"],
+      outputs: ["Stage composition", "TaskGraph source", "RoleSpec", "Task schema"],
+      owns: ["完整任务语义", "Stage 组合", "不拥有算法实例或 Job 状态"],
+      invariants: ["任务角色引用 ObjectGraph 命名对象", "定义期不启动线程", "配置节点不可直接调用硬件", "候选集合不得隐式收缩"],
       errors: ["TASK_SCHEMA_INVALID", "MISSING_ROLE", "UNSUPPORTED_ROBOT_DEFINITION"],
-      stack: "C++20 类型注册入口 + 声明式 TaskGraph YAML",
-      tests: "编译 TaskGraph、缺角色、资源冲突和分支完整性"
+      stack: "M1 使用 C++20 typed builder；后续声明式配置编译到同一模型",
+      tests: "Stage 复用、编译 TaskGraph、缺角色、端口错配、资源冲突和分支完整性"
+    },
+    {
+      id: "task-stage",
+      name: "TaskStage + TaskFragment",
+      group: "startup",
+      lifetime: "Task definition / build phase",
+      purpose: "在完整 Task 和细粒度 TaskNode 之间提供可复用的深 Module，用少量语义参数隐藏稳定子流程。",
+      inputs: ["typed input ports", "Stage config", "ObjectGraph role references"],
+      outputs: ["typed output ports", "TaskFragment", "stage_path/node metadata"],
+      owns: ["Stage 语义", "Fragment 内部节点和边", "命名空间", "合法 checkpoint 声明"],
+      invariants: ["不是 MotionObject", "不拥有运行资源", "不承诺原子执行", "候选到单值必须显式选择"],
+      errors: ["PORT_TYPE_MISMATCH", "MISSING_PORT_PRODUCER", "DUPLICATE_QUALIFIED_NODE", "IMPLICIT_CANDIDATE_SELECTION"],
+      stack: "C++20 typed builder；构建后展开为扁平 TaskGraph",
+      tests: "同一 Stage 多次复用、Fragment 展开、stage_path 保留、候选集合跨 Stage 与隐式收缩失败"
     },
     {
       id: "registry-hub",
@@ -360,17 +381,17 @@ window.MOTION_ARCH_DATA = {
     },
     {
       id: "workflow-compiler",
-      name: "WorkflowCompiler",
+      name: "TaskGraphBuilder / WorkflowCompiler",
       group: "startup",
       lifetime: "Application / Task type",
-      purpose: "把声明式任务配置编译为不可变、类型化且已验证的 TaskGraph。",
-      inputs: ["TaskGraph YAML", "Task schema", "Object descriptors"],
+      purpose: "把 TaskStage/TaskFragment 展开并验证为不可变、扁平、类型化的 TaskGraph；后续可接受声明式来源。",
+      inputs: ["C++ TaskStage/Fragment", "Task schema", "Object descriptors", "后续 Task YAML"],
       outputs: ["Compiled TaskGraph", "诊断列表"],
-      owns: ["语法、类型、分支、重试、超时、资源和可达终态检查"],
-      invariants: ["运行时不再解析 YAML", "所有 node 输入输出均有类型", "循环必须有退出/预算"],
-      errors: ["UNKNOWN_NODE", "INVALID_BRANCH", "UNBOUNDED_RETRY", "RESOURCE_DEADLOCK"],
-      stack: "C++17 编译器；YAML 输入；稳定内部 AST",
-      tests: "golden TaskGraph、非法图、类型错配、循环预算、schema 迁移"
+      owns: ["Fragment 展开", "命名空间", "端口类型、分支、重试、超时和可达终态检查"],
+      invariants: ["运行时只读取扁平图", "所有 node 输入输出均有类型", "循环必须有退出/预算", "不隐式选择候选"],
+      errors: ["UNKNOWN_NODE", "PORT_TYPE_MISMATCH", "INVALID_BRANCH", "UNBOUNDED_RETRY"],
+      stack: "M1 C++20 typed builder；后续 YAML 只作为输入 Adapter",
+      tests: "Fragment 展开、非法图、类型错配、候选显式选择、循环预算和后续 schema 迁移"
     },
     {
       id: "runtime-graph",
@@ -509,7 +530,7 @@ window.MOTION_ARCH_DATA = {
       owns: ["段连接连续性", "position/velocity/acceleration/time", "执行 profile 适配"],
       invariants: ["positions/velocities/time_from_start 完整", "时间严格递增", "不跨 attach/release barrier 盲拼"],
       errors: ["DISCONTINUOUS_SEGMENT", "TIME_PARAMETERIZATION_FAILED", "LIMIT_EXCEEDED", "UNSUPPORTED_PROFILE"],
-      stack: "C++20；TrajectoryProcessor 家族；可包装 MoveIt 时间参数化实现",
+      stack: "C++20；Composer / TimeParameterizer / Validator；可包装 MoveIt 时间参数化实现",
       tests: "段拼接、同步、限位、字段完整性和轨迹属性测试"
     },
     {
@@ -603,14 +624,14 @@ window.MOTION_ARCH_DATA = {
     },
     {
       family: "轨迹处理",
-      registry: "MotionObject → TrajectoryProcessor",
-      interfaces: ["TrajectoryComposer", "TrajectorySmoother", "TimeParameterizer", "TrajectoryValidator"],
+      registry: "MotionObject → Composer / TimeParameterizer / Validator",
+      interfaces: ["TrajectoryComposer", "TimeParameterizer", "TrajectoryValidator"],
       adapters: ["MoveIt 时间参数化", "自研拼接/平滑", "领域验证器", "Deterministic Fake"],
       compatibility: "关节集合、速度/加速度字段、插值 profile、同步轴组"
     },
     {
       family: "机器人运行环境",
-      registry: "ActiveObject → RobotRuntime",
+      registry: "MotionObject → RobotRuntime（主动资源另行组合 ActiveObject）",
       interfaces: ["BufferedTrajectoryExecutor", "RobotStateSource", "RuntimeHealth", "TelemetrySource"],
       adapters: ["RealRobot", "DigitalTwin", "Fake", "Replay"],
       compatibility: "轴合同、插值方式、必需轨迹字段、控制周期、取消/停止/反馈能力"
@@ -1042,7 +1063,7 @@ observers: [journal.jsonl, rerun, metrics]`,
     {
       name: "src/task/",
       status: "任务定义与运行",
-      contents: ["TaskDefinition", "TaskGraph/Compiler", "JobManager", "MotionEngine", "Guard/Primitive/Policy"],
+      contents: ["TaskDefinition", "TaskStage/TaskFragment", "typed port", "TaskGraph/Compiler", "JobManager", "MotionEngine", "Guard/Primitive/Policy"],
       dependencies: "依赖对象家族接口；通过命名角色引用 ObjectGraph typed handle",
       note: "任务类型先留在同一程序；只有独立发布产生真实价值时才考虑拆制品。"
     },
@@ -1088,7 +1109,7 @@ observers: [journal.jsonl, rerun, metrics]`,
 
   configFiles: [
     ["systems/*.yaml", "启动选择", "RobotDefinitionSource、对象实例、typed bindings、Communication、Observer、并发预算"],
-    ["tasks/*.yaml", "任务流程", "node、typed port、分支、join、retry、timeout、guard、barrier；不写任意代码"],
+    ["tasks/*.yaml", "任务流程", "stage/fragment、typed port、显式候选选择、分支、join、retry、timeout、guard、barrier；不写任意代码"],
     ["objects/*.yaml", "对象参数", "seed、timeout、规划预算、backend 等；由具体 MotionObject schema 验证"],
     ["robots/*.yaml", "机器人运行合同", "资源 URI、工具、标定、执行轴组和安全限制引用"],
     ["execution_profiles/*.yaml", "执行能力镜像/期望", "字段、插值、限制、stop/feedback；启动时与 provider 实际能力比对"],
@@ -1117,7 +1138,7 @@ observers: [journal.jsonl, rerun, metrics]`,
     {
       phase: "3",
       name: "轨迹与执行对象",
-      changes: ["TrajectoryProcessor", "速度字段合同", "ExecutionSupervisor", "Fake Master interpolation/feedback"],
+      changes: ["Composer / TimeParameterizer / Validator", "速度字段合同", "ExecutionSupervisor", "Fake Master interpolation/feedback"],
       evidence: "完整轨迹缓存、插值、取消和 final-state 测试"
     },
     {

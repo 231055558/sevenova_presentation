@@ -3584,3 +3584,397 @@ main {
     font-size: 0.8rem;
   }
 }
+
+/* Briefing overview: the landing page keeps the established Vandyke/bisque
+   language while reducing the architecture to one evidence-backed story. */
+.briefing-page main {
+  max-width: 1320px;
+}
+
+.briefing-page .briefing-hero {
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.55fr);
+}
+
+.briefing-page .briefing-hero h2 {
+  max-width: 1050px;
+  font-size: clamp(3rem, 5.6vw, 5.15rem);
+}
+
+.briefing-status > span {
+  display: block;
+  margin-bottom: 9px;
+  color: #dcbda1;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.brief-proof {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--vandyke);
+}
+
+.brief-proof article {
+  min-width: 0;
+  padding: 23px 20px;
+  border-right: 1px solid var(--line-strong);
+  background: rgba(255, 250, 240, 0.48);
+}
+
+.brief-proof article:first-child {
+  padding-left: 0;
+}
+
+.brief-proof article:last-child {
+  border-right: 0;
+}
+
+.brief-proof strong,
+.brief-proof span {
+  display: block;
+}
+
+.brief-proof strong {
+  color: var(--vandyke);
+  font-family: "Iowan Old Style", "Noto Serif CJK SC", serif;
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.brief-proof span {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.brief-section {
+  margin-top: 68px;
+}
+
+.brief-flow {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1fr) 34px minmax(150px, 1fr) 34px
+    minmax(190px, 1.16fr) 34px minmax(150px, 1fr) 34px minmax(150px, 1fr);
+  align-items: stretch;
+  padding: 22px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-warm);
+}
+
+.brief-flow article {
+  display: flex;
+  min-width: 0;
+  min-height: 178px;
+  padding: 18px;
+  flex-direction: column;
+  justify-content: space-between;
+  border-top: 4px solid var(--brown);
+  background: var(--paper);
+}
+
+.brief-flow article > span,
+.brief-code-shape article > span,
+.brief-roadmap article > span,
+.brief-advantages article > span {
+  color: var(--clay);
+  font: 800 0.64rem/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.brief-flow article strong {
+  margin: auto 0 8px;
+  color: var(--vandyke-deep);
+  font-family: "Iowan Old Style", "Noto Serif CJK SC", serif;
+  font-size: 1.12rem;
+}
+
+.brief-flow article small {
+  color: var(--muted);
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.brief-flow .brief-flow-core {
+  border-color: var(--vandyke);
+  color: #fff8ed;
+  background: var(--vandyke);
+}
+
+.brief-flow .brief-flow-core span,
+.brief-flow .brief-flow-core small {
+  color: #ddc5ac;
+}
+
+.brief-flow .brief-flow-core strong {
+  color: #fff8ed;
+  font-size: 1.35rem;
+}
+
+.brief-flow > i {
+  position: relative;
+  align-self: center;
+  height: 1px;
+  background: var(--vandyke);
+}
+
+.brief-flow > i::after {
+  position: absolute;
+  top: -4px;
+  right: -1px;
+  width: 0;
+  height: 0;
+  content: "";
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid var(--vandyke);
+}
+
+.brief-output-rail {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 90px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 13px 18px;
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line-strong);
+  background: #e9ede4;
+}
+
+.brief-output-rail span {
+  color: var(--olive);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.brief-output-rail strong {
+  color: #4d5745;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.brief-advantages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--vandyke);
+  border-bottom: 1px solid var(--vandyke);
+}
+
+.brief-advantages article {
+  min-width: 0;
+  min-height: 230px;
+  padding: 24px;
+  border-right: 1px solid var(--line-strong);
+}
+
+.brief-advantages article:first-child {
+  padding-left: 0;
+}
+
+.brief-advantages article:last-child {
+  border-right: 0;
+}
+
+.brief-advantages h3 {
+  margin-top: 58px;
+  font-size: 1.5rem;
+}
+
+.brief-advantages p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.brief-code-shape {
+  display: grid;
+  grid-template-columns: 1.16fr repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.brief-code-shape article {
+  min-width: 0;
+  min-height: 210px;
+  padding: 21px;
+  border: 1px solid var(--line-strong);
+  border-top: 4px solid var(--olive);
+  background: var(--paper);
+}
+
+.brief-code-shape .shape-kernel {
+  border-color: var(--vandyke);
+  color: #fff8ed;
+  background: var(--vandyke);
+}
+
+.brief-code-shape .shape-kernel > span,
+.brief-code-shape .shape-kernel p {
+  color: #ddc5ac;
+}
+
+.brief-code-shape .shape-kernel h3 {
+  color: #fff8ed;
+}
+
+.brief-code-shape h3 {
+  margin: 55px 0 8px;
+  font-size: 1.35rem;
+}
+
+.brief-code-shape p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.brief-roadmap {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+}
+
+.brief-roadmap article {
+  display: grid;
+  min-width: 0;
+  min-height: 150px;
+  padding: 20px;
+  align-content: space-between;
+  border-right: 1px solid var(--line);
+}
+
+.brief-roadmap article:last-child {
+  border-right: 0;
+}
+
+.brief-roadmap .done {
+  color: #fff8ed;
+  background: var(--vandyke);
+}
+
+.brief-roadmap .done span,
+.brief-roadmap .done small {
+  color: #ddc5ac;
+}
+
+.brief-roadmap strong,
+.brief-roadmap small {
+  display: block;
+}
+
+.brief-roadmap strong {
+  margin-top: 28px;
+  color: var(--vandyke-deep);
+  font-size: 0.84rem;
+}
+
+.brief-roadmap .done strong {
+  color: #fff8ed;
+}
+
+.brief-roadmap small {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.66rem;
+}
+
+.brief-links {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1040px) {
+  .briefing-page .briefing-hero,
+  .brief-code-shape {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .briefing-status {
+    align-self: stretch;
+  }
+
+  .brief-proof,
+  .brief-advantages,
+  .brief-roadmap,
+  .brief-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brief-flow {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .brief-flow article {
+    min-height: 130px;
+  }
+
+  .brief-flow > i {
+    width: 1px;
+    height: 24px;
+    justify-self: center;
+  }
+
+  .brief-flow > i::after {
+    top: auto;
+    right: -4px;
+    bottom: -1px;
+    border-top: 8px solid var(--vandyke);
+    border-right: 5px solid transparent;
+    border-bottom: 0;
+    border-left: 5px solid transparent;
+  }
+
+  .brief-output-rail {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+
+  .brief-advantages article:nth-child(2),
+  .brief-roadmap article:nth-child(2) {
+    border-right: 0;
+  }
+
+  .brief-advantages article:nth-child(-n + 2),
+  .brief-roadmap article:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line-strong);
+  }
+}
+
+@media (max-width: 680px) {
+  .briefing-page .briefing-hero,
+  .brief-proof,
+  .brief-advantages,
+  .brief-code-shape,
+  .brief-roadmap,
+  .brief-links {
+    grid-template-columns: 1fr;
+  }
+
+  .briefing-page .briefing-hero h2 {
+    font-size: 2.75rem;
+  }
+
+  .brief-proof article,
+  .brief-proof article:first-child,
+  .brief-advantages article,
+  .brief-advantages article:first-child,
+  .brief-roadmap article {
+    padding: 19px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .brief-proof article:last-child,
+  .brief-advantages article:last-child,
+  .brief-roadmap article:last-child {
+    border-bottom: 0;
+  }
+
+  .brief-advantages article {
+    min-height: 190px;
+  }
+
+  .brief-output-rail {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
