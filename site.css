@@ -259,6 +259,50 @@ main {
   transform: translateX(3px);
 }
 
+.weekly-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 42px;
+  color: #f4f4ef;
+  background: #121212;
+}
+
+.weekly-preview .preview-label {
+  color: #a7f432;
+  font: 700 0.72rem/1.2 ui-monospace, monospace;
+}
+
+.weekly-preview strong {
+  margin-top: 26px;
+  font: 850 5.5rem/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.weekly-bars {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+  margin-top: 30px;
+}
+
+.weekly-bars span {
+  height: 54px;
+  border: 1px solid #646864;
+  background: #262826;
+}
+
+.weekly-bars span:nth-child(2),
+.weekly-bars span:nth-child(4) {
+  background: #a7f432;
+}
+
+.weekly-preview p {
+  margin: 24px 0 0;
+  color: #b9bdb9;
+  font-size: 0.82rem;
+}
+
 .presentation-copy > a span {
   transition: transform 150ms ease;
 }

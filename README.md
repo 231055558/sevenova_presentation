@@ -6,8 +6,12 @@ ALFA Robot 的工程架构、系统流程和协作演示静态站点。
 
 ## 当前主题
 
+- [运控组本周进展与下周安排（2026-09-23）](https://231055558.github.io/sevenova_presentation/weekly/2026-09-23/)
 - [运控对象系统架构 v1](https://231055558.github.io/sevenova_presentation/motion_runtime_architecture/)
 - [V1 状态机 × 数据流地图](https://231055558.github.io/sevenova_presentation/v1_state_data_flow_map/)
+
+组会演示的 Slidev 源文件位于 `slides/2026-09-23/`，静态构建产物位于
+`weekly/2026-09-23/`。
 
 `motion_runtime_architecture/` 同步自：
 
