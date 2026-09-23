@@ -63,78 +63,88 @@ duration: 22min
 
 ---
 
-<div class="kicker">02 · 记录上的小问题</div>
+<div class="kicker">02 · 协作复盘</div>
 
-# 有些“完成”还可以再说清楚一点
+# 本周有三处典型的协作记录问题
 
-<div class="split mt-10">
+<div class="case-overview mt-8">
   <div>
-    <div class="big-question">做完了，<br>效果怎样？</div>
-    <p class="lead mt-5">代码推进已经能看到，但实验结论有时还缺少几项关键信息。</p>
+    <span class="person">张泽临</span>
+    <b>结果有记录，后续任务没接上</b>
+    <p>MOTION-224 已完成，个人周报里的技术证据很完整；但双臂异步和学习调研还没有对应的在办 Linear 任务。</p>
+    <em>典型问题：任务交接断档</em>
   </div>
-  <div class="question-list">
-    <div><b>算法链路</b><span>到底用了哪些阶段、哪些约束、哪些降级？</span></div>
-    <div><b>性能口径</b><span>计时从哪里开始，到哪里结束？是否包含重试？</span></div>
-    <div><b>失败样本</b><span>哪些箱位、姿态和参数仍然失败？</span></div>
-    <div><b>复现实物</b><span>代码、配置、场景、模型、日志如何对应？</span></div>
+  <div>
+    <span class="person">蒋梓欣</span>
+    <b>飞书和 Linear 状态没有对齐</b>
+    <p>WPF 工作站只在飞书任务中；拖动示教仍停在 MOTION-197 Review，影子测试与真机验收边界不直观。</p>
+    <em>典型问题：平台分散、状态含义不清</em>
+  </div>
+  <div>
+    <span class="person">李昊洋 · 文子轩</span>
+    <b>并行实验没有共用比较口径</b>
+    <p>5×5 两条路线分别记录约 50 秒 / 箱和核心规划平均 2.60 秒，但输入、计时边界和重试口径不同。</p>
+    <em>典型问题：结果无法直接横向比较</em>
   </div>
 </div>
 
-<div class="bottom-note warning">建议：关闭任务时顺手补上这些信息，后面复用会轻松很多。</div>
+<div class="bottom-note warning">这里复盘的是协作记录，不是否定具体工作结果。</div>
 <div class="page-no">03 / 11</div>
 
 ---
 
-<div class="kicker">03 · 真实案例</div>
+<div class="kicker">03 · 典型一</div>
 
-# 同样写着“25 / 25”，两组耗时不能直接比较
+# 张泽临：结果很完整，但任务链没有继续
 
-<div class="metric-compare mt-8">
-  <div class="metric-panel">
-    <span>方案 A · 完整流程观察</span>
-    <strong>约 50 s / 箱</strong>
-    <p>暴露了单箱全链路性能瓶颈，但当前记录没有拆清每个阶段的耗时占比。</p>
+<div class="case-detail mt-8">
+  <div class="case-fact good">
+    <span>做得好的部分</span>
+    <h3>MOTION-224 与个人周报</h3>
+    <p>25 / 25 抓取、25 / 25 空载过渡、平均 2.60 秒、中位 1.31 秒、困难箱编号和 Rerun / CSV 都写清楚了。</p>
   </div>
-  <div class="compare-mark">≠</div>
-  <div class="metric-panel focus">
-    <span>方案 B · 核心规划计时</span>
-    <strong>2.60 s <small>平均</small></strong>
-    <div class="mini-stats"><b>1.31 s 中位</b><b>22 / 25 &lt; 5 s</b></div>
-    <p>统计的是轨迹核心规划，并非完整抓放周期。</p>
+  <div class="case-arrow">→</div>
+  <div class="case-fact missing">
+    <span>断掉的部分</span>
+    <h3>下一步没有进入在办任务</h3>
+    <p>困难箱长尾、双臂异步、学习算法调研已经进入讨论，但当前看不到对应的活动 Issue 和承接关系。</p>
   </div>
 </div>
 
-<div class="timing-bar mt-8">
-  <span>感知</span><span>IK</span><span class="active">规划</span><span>执行</span><span>吸附</span><span>放置</span><span>重试</span>
+<div class="fix-strip mt-8">
+  <b>这次怎么改</b>
+  <span>在 MOTION-224 结论中链接后续 Issue</span>
+  <i>→</i>
+  <span>双臂异步与学习调研分别建立任务</span>
+  <i>→</i>
+  <span>下周进展回到对应 Issue 更新</span>
 </div>
-<div class="bottom-note">下次比较前，先冻结：输入集、算法版本、计时边界、超时与重试规则。</div>
+<div class="bottom-note">重点不是多建任务，而是让“已完成结果 → 下一步工作”能够顺着链接找到。</div>
 <div class="page-no">04 / 11</div>
 
 ---
 
-<div class="kicker">04 · 团队积累</div>
+<div class="kicker">04 · 典型二、三</div>
 
-# 实验材料这样放，后面会更容易复用
+# 状态要对齐，平行实验要能比较
 
-<div class="evidence-layout mt-8">
-  <div class="file-tree">
-    <div class="tree-title">experiment_20260923/</div>
-    <code>README.md</code><span>目的、算法链路、结论</span>
-    <code>manifest.yaml</code><span>commit、模型、场景、配置、seed</span>
-    <code>summary.json</code><span>成功率、耗时、关键指标</span>
-    <code>failures.csv</code><span>失败样本与原因分类</span>
-    <code>evidence/</code><span>Rerun、截图、视频、原始日志</span>
+<div class="dual-cases mt-7">
+  <div class="named-case">
+    <div class="case-head"><span>蒋梓欣</span><b>任务状态分散</b></div>
+    <div class="case-line"><em>飞书</em><p>WPF 工作站：进行中</p></div>
+    <div class="case-line"><em>Linear</em><p>MOTION-197 拖动示教：In Review</p></div>
+    <div class="case-line"><em>实际边界</em><p>影子链路已跑通，真机运动尚未验收</p></div>
+    <div class="case-fix"><b>补法</b><span>WPF 建对应 Issue；MOTION-197 更新“已验证 / 未验证 / 下一步”。</span></div>
   </div>
-  <div class="evidence-flow">
-    <div><b>代码 PR</b><span>实现变化</span></div>
-    <i>+</i>
-    <div><b>实验制品</b><span>可复现数据</span></div>
-    <i>+</i>
-    <div><b>Linear 结论</b><span>一句话结论、边界、链接</span></div>
+  <div class="named-case">
+    <div class="case-head"><span>李昊洋 · 文子轩</span><b>平行结果不可直接比较</b></div>
+    <div class="compare-mini"><strong>约 50 s / 箱</strong><i>≠</i><strong>2.60 s 平均</strong></div>
+    <p class="case-explain">前者观察完整流程，后者只统计核心规划；两边没有先共用 benchmark 定义。</p>
+    <div class="case-fix"><b>补法</b><span>共用输入集、算法版本、计时起止、超时与重试规则。</span></div>
   </div>
 </div>
 
-<div class="bottom-note success">不要求写长文档，关键是下一位同事能找到、看懂并复现。</div>
+<div class="bottom-note success">最小要求：Linear 能看懂当前边界；实验之间能用同一口径做比较。</div>
 <div class="page-no">05 / 11</div>
 
 ---
