@@ -76,8 +76,8 @@ record: false
   <div class="step"><div class="num">01</div><h2>我发布父Issue</h2><p>写需求、范围、产物、验收要求和时间。</p></div>
   <div class="step"><div class="num">02</div><h2>老板给基础分</h2><p>分数记录在发布的任务上。</p></div>
   <div class="step"><div class="num">03</div><h2>我或同事接取</h2><p>确认主责人、工作范围、依赖和计划。</p></div>
-  <div class="step"><div class="num">04</div><h2>接取人开子Issue</h2><p>自己拆步骤，记录实现、实验和问题。</p></div>
-  <div class="step"><div class="num">05</div><h2>回父Issue提交成果</h2><p>评论附结果、证据和还没完成的部分。</p></div>
+  <div class="step"><div class="num">04</div><h2>按工作方向开子Issue</h2><p>同一方向可包含多步操作，过程持续写在评论中。</p></div>
+  <div class="step"><div class="num">05</div><h2>检查父任务整体结果</h2><p>负责人评估各方向已满足要求后，汇总到父Issue申请验收。</p></div>
   <div class="step"><div class="num">06</div><h2>我验收并给评价</h2><p>需要调整就继续；评估完成后由我设Done。</p></div>
 </div>
 
@@ -130,7 +130,7 @@ record: false
 
 <div class="eyebrow">子Issue示例</div>
 
-# 父Issue管交付，子Issue管怎么做
+# 子Issue记录一个方向，父Issue验收整体任务
 
 <div class="two">
   <div class="thread">
@@ -138,7 +138,7 @@ record: false
     <div class="child"><b>子任务：定位计算热点</b><span>耗时拆解</span></div>
     <div class="child"><b>子任务：实现候选处理优化</b><span>代码与回归</span></div>
     <div class="child"><b>子任务：统一案例对照</b><span>数据与报告</span></div>
-    <p class="small" style="margin-top:18px">子任务怎么拆，由接取人根据实际工作决定。</p>
+    <p class="small" style="margin-top:18px">一个子Issue可以包含多次修改、实验和提交。按工作方向划分，不是每一步都开一项。</p>
   </div>
   <div class="panel">
     <h2>子Issue里更新的内容</h2>
@@ -151,7 +151,7 @@ record: false
   </div>
 </div>
 
-<div class="footer"><span>建议只对接取的父任务计一次分，子Issue不重复计分</span><span>{{ $page }} / {{ $nav.total }}</span></div>
+<div class="footer"><span>子Issue结束后保留结果；父负责人综合检查后再申请父任务验收</span><span>{{ $page }} / {{ $nav.total }}</span></div>
 
 ---
 
@@ -160,12 +160,13 @@ record: false
 # 提交验收时，父Issue评论包含哪些内容
 
 <div class="thread">
-  <div class="thread-head"><strong>交付评论的四项内容</strong><span class="tag">模板</span></div>
+  <div class="thread-head"><strong>申请验收</strong><span class="tag">父负责人确认整体已完成后提交</span></div>
   <div class="facts">
-    <div><b>完成内容</b>哪些要求已经完成，哪些还没完成。</div>
-    <div><b>测试结果</b>同条件的成功率、耗时、失败原因和适用范围。</div>
-    <div><b>产物链接</b>代码 / PR、报告、数据、运行方法和回放。</div>
-    <div><b>已知限制</b>是否只测代表案例；还有哪些现场或参数没验证。</div>
+    <div><b>完成情况</b>对照要求，说明已完成和未完成的部分。</div>
+    <div><b>验收结果</b>逐项列出测试结果和对应证据。</div>
+    <div><b>交付物</b>代码／PR、数据／报告、运行方法／演示。</div>
+    <div><b>已知问题</b>仍存在的限制和需要继续处理的内容。</div>
+    <div><b>参与情况</b>各人实际负责的工作及对应子Issue。</div>
   </div>
 </div>
 
@@ -220,7 +221,7 @@ record: false
   <div><time>10/15</time><b>老板</b><span>在父Issue上给出这个任务的基础分</span></div>
   <div><time>10/16</time><b>同事A</b><span>评论“我来接”，写下计划和预计完成时间，任务指派给他</span></div>
   <div><time>10/16</time><b>同事A</b><span>自己开3个子Issue：找计算热点 / 改候选处理 / 前后对照测试</span></div>
-  <div><time>10/23</time><b>同事A</b><span>在父Issue评论提交成果：PR、对照数据、运行方法、已知限制</span></div>
+  <div><time>10/23</time><b>同事A</b><span>综合检查各子Issue结果，确认父任务已满足要求后评论申请验收</span></div>
   <div class="back"><time>10/24</time><b>我</b><span>验收：少了失败案例清单，<em>退回继续调整</em></span></div>
   <div><time>10/27</time><b>同事A</b><span>补齐后再次提交</span></div>
   <div class="done"><time>10/28</time><b>我</b><span>完成评估，写下各项评价和理由，<em>设为Done</em></span></div>
