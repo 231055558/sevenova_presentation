@@ -6,12 +6,15 @@ ALFA Robot 的工程架构、系统流程和协作演示静态站点。
 
 ## 当前主题
 
+- [部门任务跟踪使用说明（2026-10-14）](https://231055558.github.io/sevenova_presentation/task-tracking/)：WBS、任务接取、交付验收、六项评价和多人贡献分配。
 - [运控组本周进展与下周安排（2026-09-23）](https://231055558.github.io/sevenova_presentation/weekly/2026-09-23/)
 - [运控对象系统架构 v1](https://231055558.github.io/sevenova_presentation/motion_runtime_architecture/)
 - [V1 状态机 × 数据流地图](https://231055558.github.io/sevenova_presentation/v1_state_data_flow_map/)
 
 组会演示的 Slidev 源文件位于 `slides/2026-09-23/`，静态构建产物位于
 `weekly/2026-09-23/`。
+
+任务跟踪演示源文件位于 `slides/2026-10-14-task-tracking/`，静态产物位于 `task-tracking/`；使用hash路由，可由现有GitHub Pages发布。当前采用的评价细则见源目录的 `评价规则.md`。
 
 `motion_runtime_architecture/` 同步自：
 

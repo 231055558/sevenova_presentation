@@ -1,0 +1,25 @@
+{
+  "name": "motion-task-tracking-2026-10-14",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev slides.md --bind 127.0.0.1 --port 3040",
+    "build": "slidev build slides.md --router-mode hash --base /sevenova_presentation/task-tracking/ --out ../../task-tracking --without-notes",
+    "export": "slidev export slides.md --format png --output /tmp/motion-task-tracking-preview"
+  },
+  "dependencies": {
+    "@slidev/cli": "52.15.2",
+    "@slidev/theme-default": "0.25.0",
+    "vue": "3.5.33"
+  },
+  "devDependencies": {
+    "playwright-chromium": "1.62.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "markdown-it": "14.3.2",
+      "vue-router": "5.3.1",
+      "vite": "8.3.0"
+    }
+  }
+}
